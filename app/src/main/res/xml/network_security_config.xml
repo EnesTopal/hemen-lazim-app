@@ -1,0 +1,8 @@
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">ec2-51-20-51-240.eu-north-1.compute.amazonaws.com</domain>
+        <domain includeSubdomains="true">51.20.51.240</domain>
+        <domain includeSubdomains="true">localhost</domain>
+        <domain includeSubdomains="true">10.0.2.2</domain>
+    </domain-config>
+</network-security-config>
