@@ -42,7 +42,6 @@ class AuthViewModel(
             if (state.isLogin) {
                 val res = repo.login(CreateUserDTO(state.username, state.password))
                 if (res.isSuccess) {
-                    Log.d("AuthViewModel", "submit: logged in user token: ${res.getOrNull()}")
                     _ui.update { it.copy(isLoading = false, toastMessage = "Login başarılı") }
                     onLoginSuccessNavigate()
                 } else {
@@ -56,7 +55,6 @@ class AuthViewModel(
                 )
                 val res = repo.register(body)
                 if (res.isSuccess) {
-                    Log.d("AuthViewModel", "submit: registered user: ${res.getOrNull()}")
                     toggleMode()
                     _ui.update { it.copy(isLoading = false, toastMessage = "Kayıt başarılı, şimdi giriş yapın") }
                     onRegisterSwitchedToLogin()

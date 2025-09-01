@@ -16,19 +16,20 @@ import com.tpl.hemen_lazim.utils.SharedPreferencesProvider
 
 @Composable
 fun PageOrientation(){
-    var navController = rememberNavController()
+    val navController = rememberNavController()
     val context = LocalContext.current
-    val token = SharedPreferencesProvider.getToken()
+
+    val token = com.tpl.hemen_lazim.utils.SharedPreferencesProvider.getAccessToken()
     Log.e("PageOrientation", "Token: $token")
 
-    val startDestination = if (SharedPreferencesProvider.isTokenValidWithToast(context)) "Profile" else "Auth"
-
+    val startDestination =
+        if (SharedPreferencesProvider.isTokenValidWithToast(context))
+            "Profile" else "Auth"
 
     NavHost(navController = navController, startDestination = startDestination){
-        composable("Auth") { Auth(navController = navController) }
-        composable("Profile") { Profile(navController = navController) }
-        composable("MaterialRequest") { MaterialRequest(navController = navController) }
-
+        composable("Auth") {Auth(navController = navController) }
+        composable("Profile") {Profile(navController = navController) }
+        composable("MaterialRequest") {MaterialRequest(navController = navController) }
     }
 }
 
