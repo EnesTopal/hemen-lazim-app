@@ -45,6 +45,7 @@ class MainActivity : ComponentActivity() {
                     }
                 }
                 SharedPreferencesProvider.init(this)
+                PageOrientation()
 
             }
         }
