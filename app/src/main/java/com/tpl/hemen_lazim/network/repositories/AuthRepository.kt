@@ -1,5 +1,6 @@
 package com.tpl.hemen_lazim.network.repositories
 
+import android.util.Log
 import com.tpl.hemen_lazim.model.DTOs.CreateUserDTO
 import com.tpl.hemen_lazim.model.DTOs.UserDTO
 import com.tpl.hemen_lazim.network.services.AuthService
@@ -12,9 +13,9 @@ class AuthRepository(
     private val api: AuthService = RetrofitClient.retrofit.create(AuthService::class.java)
 ) {
 
-    suspend fun login(username: String, password: String): Result<String> {
+    suspend fun login(createUserDTO: CreateUserDTO): Result<String> {
         return try {
-            val res = api.login(CreateUserDTO(username = username, userpassword = password))
+            val res = api.login(CreateUserDTO(userName = createUserDTO.userName, userPassword = createUserDTO.userPassword, email = createUserDTO.email))
             if (res.isSuccessful) {
                 val token = res.body()?.data
                 if (!token.isNullOrEmpty()) Result.success(token)
@@ -31,9 +32,10 @@ class AuthRepository(
         }
     }
 
-    suspend fun register(username: String, password: String): Result<UserDTO> {
+    suspend fun register(createUserDTO: CreateUserDTO): Result<UserDTO> {
+        Log.d("AuthRepository", "register: $createUserDTO")
         return try {
-            val res = api.register(CreateUserDTO(username = username, userpassword = password))
+            val res = api.register(createUserDTO)
             if (res.isSuccessful) {
                 val user = res.body()?.data
                 if (user != null) Result.success(user)
