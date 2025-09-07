@@ -24,7 +24,7 @@ fun PageOrientation(){
 
     val startDestination =
         if (SharedPreferencesProvider.isTokenValidWithToast(context))
-            "Profile" else "Auth"
+            "Auth" else "Auth"
 
     NavHost(navController = navController, startDestination = startDestination){
         composable("Auth") {Auth(navController = navController) }

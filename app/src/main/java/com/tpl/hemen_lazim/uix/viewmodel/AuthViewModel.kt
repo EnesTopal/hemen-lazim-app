@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.tpl.hemen_lazim.model.AuthUiState
 import com.tpl.hemen_lazim.model.DTOs.CreateUserDTO
 import com.tpl.hemen_lazim.network.repositories.AuthRepository
+import com.tpl.hemen_lazim.utils.AuthValidator
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -18,48 +19,88 @@ class AuthViewModel(
     private val _ui = MutableStateFlow(AuthUiState())
     val ui: StateFlow<AuthUiState> = _ui
 
-    fun toggleMode() = _ui.update { it.copy(isLogin = !it.isLogin, toastMessage = null) }
+    fun toggleMode() = _ui.update {
+        it.copy(
+            isLogin = !it.isLogin,
+            toastMessage = null,
+            formError = null,
+            emailError = null,
+            passwordError = null
+        )
+    }
+
     fun onUsernameChange(v: String) = _ui.update { it.copy(username = v, toastMessage = null) }
     fun onEmailChange(v: String) = _ui.update { it.copy(email = v, toastMessage = null) }
-    fun onPasswordChange(v: String) = _ui.update { it.copy(password = v, toastMessage = null) }
+    fun onPasswordChange(v: String) = _ui.update {
+        val err = if (it.isLogin) null else AuthValidator.validatePassword(v)
+        it.copy(password = v, passwordError = err, toastMessage = null, formError = null)
+    }
+
     fun clearToast() = _ui.update { it.copy(toastMessage = null) }
 
     fun submit(onLoginSuccessNavigate: () -> Unit, onRegisterSwitchedToLogin: () -> Unit) {
-        val state = _ui.value
+        val s = _ui.value
 
-        if (state.username.isBlank() || state.password.isBlank()) {
-            _ui.update { it.copy(toastMessage = "Kullanıcı adı ve şifre zorunlu") }
-            return
-        }
-        if (!state.isLogin && state.email.isBlank()) {
-            _ui.update { it.copy(toastMessage = "E-posta zorunlu") }
+        val emailErr = if (s.isLogin) null else AuthValidator.validateEmail(s.email)
+        val passErr = if (s.isLogin) null else AuthValidator.validatePassword(s.password)
+
+        if ((!s.isLogin && emailErr != null) || (!s.isLogin && passErr != null) || s.username.isBlank()) {
+            val firstMsg = when {
+                s.username.isBlank() -> "Kullanıcı adı zorunlu"
+                !s.isLogin && emailErr != null -> emailErr
+                !s.isLogin && passErr != null -> passErr
+                else -> null
+            }
+            _ui.update {
+                it.copy(
+                    emailError = emailErr,
+                    passwordError = passErr,
+                    formError = firstMsg
+                )
+            }
             return
         }
 
         viewModelScope.launch {
-            _ui.update { it.copy(isLoading = true, toastMessage = null) }
+            _ui.update { it.copy(isLoading = true, toastMessage = null, formError = null) }
 
-            if (state.isLogin) {
-                val res = repo.login(CreateUserDTO(state.username, state.password))
+            if (s.isLogin) {
+                val res = repo.login(CreateUserDTO(s.username, s.password))
                 if (res.isSuccess) {
-                    _ui.update { it.copy(isLoading = false, toastMessage = "Login başarılı") }
+                    _ui.update { it.copy(isLoading = false) }
                     onLoginSuccessNavigate()
                 } else {
-                    _ui.update { it.copy(isLoading = false, toastMessage = res.exceptionOrNull()?.message ?: "Hata") }
+                    _ui.update {
+                        it.copy(
+                            isLoading = false,
+                            toastMessage = res.exceptionOrNull()?.message ?: "Hata"
+                        )
+                    }
                 }
             } else {
-                val body = CreateUserDTO(
-                    userName = state.username,
-                    userPassword = state.password,
-                    email = state.email
-                )
+                val body =
+                    CreateUserDTO(userName = s.username, userPassword = s.password, email = s.email)
                 val res = repo.register(body)
                 if (res.isSuccess) {
-                    toggleMode()
-                    _ui.update { it.copy(isLoading = false, toastMessage = "Kayıt başarılı, şimdi giriş yapın") }
+                    _ui.update {
+                        it.copy(
+                            isLoading = false,
+                            isLogin = true,
+                            toastMessage = "Kayıt başarılı, şimdi giriş yapın"
+                        )
+                    }
                     onRegisterSwitchedToLogin()
                 } else {
-                    _ui.update { it.copy(isLoading = false, toastMessage = res.exceptionOrNull()?.message ?: "Hata") }
+                    val msg = res.exceptionOrNull()?.message ?: "Hata"
+                    val emailTaken = msg.contains("Email already in use", ignoreCase = true)
+                    _ui.update {
+                        it.copy(
+                            isLoading = false,
+                            formError = if (emailTaken) "Bu e-posta zaten kayıtlı" else null,
+                            emailError = if (emailTaken) "Bu e-posta zaten kayıtlı" else it.emailError,
+                            toastMessage = if (emailTaken) null else msg
+                        )
+                    }
                 }
             }
         }

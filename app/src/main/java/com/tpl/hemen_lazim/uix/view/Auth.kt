@@ -1,17 +1,13 @@
 package com.tpl.hemen_lazim.uix.view
 
 import android.widget.Toast
-import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.*
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.tpl.hemen_lazim.uix.innerview.AuthBlock
 import com.tpl.hemen_lazim.uix.viewmodel.AuthViewModel
 import com.tpl.hemen_lazim.utils.DoubleBackToExit
@@ -51,8 +47,12 @@ fun Auth(
             AuthBlock(
                 isLogin = ui.isLogin,
                 email = ui.email,
+                emailError = ui.emailError,
                 username = ui.username,
                 password = ui.password,
+                passwordError = ui.passwordError,
+                formError = ui.formError,
+                canSubmit = ui.canSubmit,
                 isLoading = ui.isLoading,
                 onToggleMode = vm::toggleMode,
                 onUsernameChange = vm::onUsernameChange,
@@ -66,8 +66,7 @@ fun Auth(
                                 launchSingleTop = true
                             }
                         },
-                        onRegisterSwitchedToLogin = {
-                        }
+                        onRegisterSwitchedToLogin = {  }
                     )
                 }
             )
