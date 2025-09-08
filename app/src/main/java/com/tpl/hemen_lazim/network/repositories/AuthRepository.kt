@@ -12,7 +12,7 @@ import java.io.IOException
 class AuthRepository(
     private val api: AuthService = RetrofitClient.retrofit.create(AuthService::class.java)
 ) {
-    // Login artık TokenResponse döndürüyor; session'ı burada kaydediyoruz.
+
     suspend fun login(createUserDTO: CreateUserDTO): Result<Unit> {
         return try {
             val res = api.login(createUserDTO)
@@ -54,6 +54,30 @@ class AuthRepository(
             Result.failure(e)
         }
     }
+
+    suspend fun refresh(refreshToken: String): Result<Unit> {
+        return try {
+            val res = api.refresh(RefreshRequest(refreshToken))
+            if (res.isSuccessful) {
+                val tr = res.body()?.data
+                if (tr != null && tr.accessToken.isNotBlank() && tr.refreshToken.isNotBlank()) {
+                    SharedPreferencesProvider.saveSession(tr.accessToken, tr.refreshToken)
+                    Result.success(Unit)
+                } else {
+                    Result.failure(IllegalStateException("Boş token(lar) döndü"))
+                }
+            } else {
+                Result.failure(IllegalStateException(extractApiMessage(res.errorBody()?.string())))
+            }
+        } catch (e: IOException) {
+            Result.failure(IOException("Bağlantı hatası: ${e.message}", e))
+        } catch (e: HttpException) {
+            Result.failure(IllegalStateException("Sunucu hatası: ${e.code()}"))
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
 
     suspend fun logout(): Result<Unit> {
         val refresh = SharedPreferencesProvider.getRefreshToken()

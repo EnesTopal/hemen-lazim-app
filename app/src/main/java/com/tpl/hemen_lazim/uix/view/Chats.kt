@@ -1,0 +1,22 @@
+package com.tpl.hemen_lazim.uix.view
+
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import com.tpl.hemen_lazim.uix.innerview.ScreenScaffold
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun Chats(navController: NavController) {
+    ScreenScaffold(navController, currentRoute = "Chats",
+        topBar = { CenterAlignedTopAppBar(title = { Text("Sohbetler") }) }
+    ) { padding ->
+        Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+            Text("Sohbet listesi yakında ✨")
+        }
+    }
+}
