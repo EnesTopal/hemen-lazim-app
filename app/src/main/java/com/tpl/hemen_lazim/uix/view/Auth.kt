@@ -7,6 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.*
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.tpl.hemen_lazim.uix.innerview.AuthBlock
 import com.tpl.hemen_lazim.uix.viewmodel.AuthViewModel
@@ -16,7 +17,7 @@ import com.tpl.hemen_lazim.utils.DoubleBackToExit
 @Composable
 fun Auth(
     navController: NavController,
-    vm: AuthViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    vm: AuthViewModel = viewModel()
 ) {
     DoubleBackToExit()
 

@@ -15,24 +15,40 @@ class RequestRepository(
     private val adminApi: AdminService = RetrofitClient.retrofit.create(AdminService::class.java)
 ) {
 
-    suspend fun createRequest(body: MaterialRequestCreateDTO): Result<MaterialRequestDTO> {
-        return try {
-            val res = api.create(body)
-            if (res.isSuccessful) {
-                val dto = res.body()?.data
-                if (dto != null) Result.success(dto)
-                else Result.failure(IllegalStateException("Boş yanıt"))
-            } else {
-                Result.failure(IllegalStateException(extractApiMessage(res.errorBody()?.string())))
-            }
-        } catch (e: IOException) {
-            Result.failure(IOException("Bağlantı hatası: ${e.message}", e))
-        } catch (e: HttpException) {
-            Result.failure(IllegalStateException("Sunucu hatası: ${e.code()}"))
-        } catch (e: Exception) {
-            Result.failure(e)
+//    suspend fun createRequest(body: MaterialRequestCreateDTO): Result<MaterialRequestDTO> {
+//        return try {
+//            val res = api.create(body)
+//            if (res.isSuccessful) {
+//                val dto = res.body()?.data
+//                if (dto != null) Result.success(dto)
+//                else Result.failure(IllegalStateException("Boş yanıt"))
+//            } else {
+//                Result.failure(IllegalStateException(extractApiMessage(res.errorBody()?.string())))
+//            }
+//        } catch (e: IOException) {
+//            Result.failure(IOException("Bağlantı hatası: ${e.message}", e))
+//        } catch (e: HttpException) {
+//            Result.failure(IllegalStateException("Sunucu hatası: ${e.code()}"))
+//        } catch (e: Exception) {
+//            Result.failure(e)
+//        }
+//    }
+suspend fun create(body: MaterialRequestCreateDTO): Result<Unit> {
+    return try {
+        val res = api.create(body)
+        if (res.isSuccessful) {
+            Result.success(Unit)
+        } else {
+            Result.failure(IllegalStateException(res.errorBody()?.string() ?: "İstek oluşturulamadı"))
         }
+    } catch (e: IOException) {
+        Result.failure(IOException("Ağ hatası: ${e.message}", e))
+    } catch (e: HttpException) {
+        Result.failure(IllegalStateException("Sunucu hatası: ${e.code()}"))
+    } catch (e: Exception) {
+        Result.failure(e)
     }
+}
 
     suspend fun listNearby(
         lat: Double,
