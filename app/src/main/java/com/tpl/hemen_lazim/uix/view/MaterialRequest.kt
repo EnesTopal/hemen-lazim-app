@@ -3,6 +3,8 @@ package com.tpl.hemen_lazim.uix.view
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -29,13 +31,16 @@ import com.tpl.hemen_lazim.uix.innerview.SegButton
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MaterialRequest(navController: NavController) {
+    // State to track which tab is selected
+    var selectedTab by remember { mutableStateOf("create") }
+    
     ScreenScaffold(
         navController, currentRoute = "MaterialRequest",
         topBar = { CenterAlignedTopAppBar(title = { Text("Malzeme Talepleri") }) }
     ) { padding ->
 
         val context = LocalContext.current
-
+        val scrollState = rememberScrollState()
 
         val api = remember { RetrofitClient.retrofit.create(RequestService::class.java) }
         val repo = remember { RequestRepository(api) }
@@ -53,36 +58,74 @@ fun MaterialRequest(navController: NavController) {
             Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .verticalScroll(scrollState)
                 .padding(16.dp)
         ) {
 
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 SegButton(
                     text = "İstek Oluştur",
-                    selected = true,
-                    onClick = { /* zaten buradayız */ })
+                    selected = selectedTab == "create",
+                    onClick = { selectedTab = "create" }
+                )
                 SegButton(
                     text = "İstek Cevapla",
-                    selected = false,
-                    onClick = { /* TODO */ },
-                    enabled = false
+                    selected = selectedTab == "respond",
+                    onClick = { selectedTab = "respond" },
+                    enabled = true
                 )
             }
             Spacer(Modifier.height(16.dp))
 
-            CreateForm(ui = ui, vm = vm)
-
-            Spacer(Modifier.height(12.dp))
-            Button(
-                onClick = { vm.submit() },
-                enabled = ui.canSubmit && !ui.isSubmitting,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                if (ui.isSubmitting) {
-                    CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
-                    Spacer(Modifier.width(8.dp))
+            when (selectedTab) {
+                "create" -> {
+                    CreateForm(ui = ui, vm = vm)
+                    
+                    Spacer(Modifier.height(12.dp))
+                    Button(
+                        onClick = { vm.submit() },
+                        enabled = ui.canSubmit && !ui.isSubmitting,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        if (ui.isSubmitting) {
+                            CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
+                            Spacer(Modifier.width(8.dp))
+                        }
+                        Text("Oluştur")
+                    }
                 }
-                Text("Oluştur")
+                "respond" -> {
+                    // Placeholder for respond functionality
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp)
+                        ) {
+                            Text(
+                                text = "İstek Cevaplama",
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "Bu özellik yakında aktif olacak. Yakındaki talepleri görebilecek ve cevap verebileceksiniz.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            
+                            // Placeholder for future features
+                            OutlinedButton(
+                                onClick = { /* TODO: Implement nearby requests */ },
+                                modifier = Modifier.fillMaxWidth(),
+                                enabled = false
+                            ) {
+                                Text("Yakındaki Talepleri Göster")
+                            }
+                        }
+                    }
+                }
             }
         }
     }

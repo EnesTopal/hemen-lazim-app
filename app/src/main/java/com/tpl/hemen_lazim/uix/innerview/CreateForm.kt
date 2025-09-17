@@ -87,42 +87,15 @@ fun CreateForm(ui: MaterialFormState, vm: MaterialRequestCreateViewModel) {
     )
     Spacer(Modifier.height(10.dp))
 
-    Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
-        OutlinedTextField(
-            value = ui.latitude,
-            onValueChange = vm::onLat,
-            label = { Text("Enlem *") },
-            isError = ui.latError != null,
-            supportingText = {
-                ui.latError?.let {
-                    Text(
-                        it,
-                        color = MaterialTheme.colorScheme.error
-                    )
-                }
-            },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-            modifier = Modifier.weight(1f)
-        )
-        OutlinedTextField(
-            value = ui.longitude,
-            onValueChange = vm::onLon,
-            label = { Text("Boylam *") },
-            isError = ui.lonError != null,
-            supportingText = {
-                ui.lonError?.let {
-                    Text(
-                        it,
-                        color = MaterialTheme.colorScheme.error
-                    )
-                }
-            },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-            modifier = Modifier.weight(1f)
-        )
-    }
+    // Location Map Component
+    LocationMapComponent(
+        currentLatitude = ui.latitude.toDoubleOrNull(),
+        currentLongitude = ui.longitude.toDoubleOrNull(),
+        onLocationSelected = { latitude, longitude ->
+            vm.updateLocation(latitude, longitude)
+        },
+        modifier = Modifier.fillMaxWidth()
+    )
     Spacer(Modifier.height(10.dp))
 
     OutlinedTextField(

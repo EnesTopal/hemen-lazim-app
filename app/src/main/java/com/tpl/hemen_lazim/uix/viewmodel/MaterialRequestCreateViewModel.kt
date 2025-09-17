@@ -1,5 +1,6 @@
 package com.tpl.hemen_lazim.uix.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tpl.hemen_lazim.network.repositories.RequestRepository
@@ -26,6 +27,18 @@ class MaterialRequestCreateViewModel(
     fun onUnit(v: Units) = _ui.update { it.copy(units = v, unitError = null) }
     fun onLat(v: String) = _ui.update { it.copy(latitude = v, latError = null) }
     fun onLon(v: String) = _ui.update { it.copy(longitude = v, lonError = null) }
+    
+    // GPS location update
+    fun updateLocation(latitude: Double, longitude: Double) {
+        _ui.update { 
+            it.copy(
+                latitude = latitude.toString(),
+                longitude = longitude.toString(),
+                latError = null,
+                lonError = null
+            )
+        }
+    }
     fun onRadius(v: String) = _ui.update { it.copy(radiusMeters = v, radiusError = null) }
     fun onExpires(v: String) = _ui.update { it.copy(expiresAt = v, expiresError = null) }
     fun clearToast() = _ui.update { it.copy(toastMessage = null) }
@@ -84,9 +97,10 @@ class MaterialRequestCreateViewModel(
             latitude = s.latitude.toDouble(),
             longitude = s.longitude.toDouble(),
             radiusMeters = s.radiusMeters.toIntOrNull(),
-            expiresAt = s.expiresAt.ifBlank { null }
+            expiresInHours = s.expiresAt.ifBlank { null }
         )
 
+        Log.d("MaterialRequestCreateViewModel", "Sending request: $body")
         val res = repo.create(body)
         if (res.isSuccess) {
             _ui.update {

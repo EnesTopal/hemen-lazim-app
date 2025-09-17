@@ -66,4 +66,10 @@ dependencies {
 
 //    implementation("androidx.core:core-splashscreen:1.0.1")
     implementation("androidx.media:media:1.7.1")
+    
+    // Location and Maps dependencies
+    implementation("com.google.android.gms:play-services-maps:19.0.0")
+    implementation("com.google.android.gms:play-services-location:21.3.0")
+    implementation("com.google.maps.android:maps-compose:6.2.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.10.2")
 }
