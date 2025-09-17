@@ -39,7 +39,12 @@ suspend fun create(body: MaterialRequestCreateDTO): Result<Unit> {
         if (res.isSuccessful) {
             Result.success(Unit)
         } else {
-            Result.failure(IllegalStateException(res.errorBody()?.string() ?: "İstek oluşturulamadı"))
+            val errorMessage = try {
+                res.errorBody()?.string() ?: "İstek oluşturulamadı"
+            } catch (e: Exception) {
+                "HTTP ${res.code()}: ${res.message()}"
+            }
+            Result.failure(IllegalStateException(extractApiMessage(errorMessage)))
         }
     } catch (e: IOException) {
         Result.failure(IOException("Ağ hatası: ${e.message}", e))

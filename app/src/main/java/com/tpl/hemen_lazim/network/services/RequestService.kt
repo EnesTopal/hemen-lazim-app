@@ -9,11 +9,11 @@ import retrofit2.http.*
 
 interface RequestService {
 
-    @POST("requests")
+    @POST("api/requests")
     suspend fun create(@Body body: MaterialRequestCreateDTO)
             : Response<ApiResponse<MaterialRequestDTO>>
 
-    @GET("requests/nearby")
+    @GET("api/requests/nearby")
     suspend fun nearby(
         @Query("lat") lat: Double,
         @Query("lng") lng: Double,
@@ -21,12 +21,12 @@ interface RequestService {
         @Query("category") category: Category? = null
     ): Response<ApiResponse<List<MaterialRequestDTO>>>
 
-    @GET("requests/mine")
+    @GET("api/requests/mine")
     suspend fun mine(): Response<ApiResponse<List<MaterialRequestDTO>>>
 
-    @POST("requests/{id}/cancel")
+    @POST("api/requests/{id}/cancel")
     suspend fun cancel(@Path("id") id: String): Response<ApiResponse<String>>
 
-    @POST("requests/{id}/complete")
+    @POST("api/requests/{id}/complete")
     suspend fun complete(@Path("id") id: String): Response<ApiResponse<String>>
 }
