@@ -12,5 +12,5 @@ data class MaterialRequestCreateDTO(
     val latitude: Double,
     val longitude: Double,
     val radiusMeters: Int? = null,
-    val expiresAt: String? = null
+    val expiresInHours: String? = null
 )
