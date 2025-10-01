@@ -41,7 +41,6 @@ fun LocationMapComponent(
     var hasLocationPermission by remember { mutableStateOf(false) }
     var isGpsEnabled by remember { mutableStateOf(false) }
     var currentLocation by remember { mutableStateOf<LatLng?>(null) }
-    var isLoadingLocation by remember { mutableStateOf(false) }
     var showLocationDialog by remember { mutableStateOf(false) }
     var showGpsDialog by remember { mutableStateOf(false) }
 
@@ -50,12 +49,6 @@ fun LocationMapComponent(
         if (currentLatitude != null && currentLongitude != null) {
             currentLocation = LatLng(currentLatitude, currentLongitude)
         }
-    }
-
-    // Check GPS status
-    LaunchedEffect(Unit) {
-        val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        isGpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
     }
 
     // Permission launcher
@@ -69,23 +62,40 @@ fun LocationMapComponent(
             getCurrentLocation(context) { location ->
                 currentLocation = location
                 onLocationSelected(location.latitude, location.longitude)
-                isLoadingLocation = false
             }
         } else if (hasLocationPermission && !isGpsEnabled) {
             showGpsDialog = true
-            isLoadingLocation = false
         } else {
             showLocationDialog = true
-            isLoadingLocation = false
         }
     }
 
-    // Check permissions on component load
+    // Check GPS status and request permission if needed
     LaunchedEffect(Unit) {
+        val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        isGpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
         hasLocationPermission = ContextCompat.checkSelfPermission(
             context,
             Manifest.permission.ACCESS_FINE_LOCATION
         ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        
+        // Auto-fetch location if we have permission and no location is set
+        if (hasLocationPermission && isGpsEnabled && currentLocation == null) {
+            getCurrentLocation(context) { location ->
+                currentLocation = location
+                onLocationSelected(location.latitude, location.longitude)
+            }
+        } else if (!hasLocationPermission && currentLocation == null) {
+            // Request permission on first load
+            permissionLauncher.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
+        } else if (!isGpsEnabled && currentLocation == null) {
+            showGpsDialog = true
+        }
     }
 
     Column(modifier = modifier) {
@@ -126,54 +136,9 @@ fun LocationMapComponent(
                     )
                 } else {
                     Text(
-                        text = "Konum henüz seçilmedi",
+                        text = "Konum henüz seçilmedi. Haritadan konumunuzu alabilir veya haritaya dokunabilirsiniz.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                
-                Spacer(modifier = Modifier.height(12.dp))
-                
-                Button(
-                    onClick = {
-                        if (!hasLocationPermission) {
-                            permissionLauncher.launch(
-                                arrayOf(
-                                    Manifest.permission.ACCESS_FINE_LOCATION,
-                                    Manifest.permission.ACCESS_COARSE_LOCATION
-                                )
-                            )
-                        } else if (!isGpsEnabled) {
-                            showGpsDialog = true
-                        } else {
-                            isLoadingLocation = true
-                            getCurrentLocation(context) { location ->
-                                currentLocation = location
-                                onLocationSelected(location.latitude, location.longitude)
-                                isLoadingLocation = false
-                            }
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = !isLoadingLocation
-                ) {
-                    if (isLoadingLocation) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(16.dp),
-                            strokeWidth = 2.dp
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                    } else {
-                        Icon(
-                            imageVector = Icons.Default.MyLocation,
-                            contentDescription = "Get Location",
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                    }
-                    Text(
-                        text = if (isLoadingLocation) "Konum Alınıyor..." 
-                               else "Mevcut Konumumu Al"
                     )
                 }
             }
@@ -181,35 +146,63 @@ fun LocationMapComponent(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Map
-        if (currentLocation != null) {
-            val cameraPositionState = rememberCameraPositionState {
-                position = CameraPosition.fromLatLngZoom(currentLocation!!, 15f)
-            }
+        // Map - Always visible
+        val defaultLocation = currentLocation ?: LatLng(41.0082, 28.9784) // Istanbul center as default
+        val cameraPositionState = rememberCameraPositionState {
+            position = CameraPosition.fromLatLngZoom(defaultLocation, 14f)
+        }
 
-            GoogleMap(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp),
-                cameraPositionState = cameraPositionState,
-                onMapClick = { latLng ->
-                    currentLocation = latLng
-                    onLocationSelected(latLng.latitude, latLng.longitude)
+        // Update camera when location changes
+        LaunchedEffect(currentLocation) {
+            currentLocation?.let { location ->
+                cameraPositionState.animate(
+                    update = CameraUpdateFactory.newLatLngZoom(location, 14f),
+                    durationMs = 500
+                )
+            }
+        }
+
+        GoogleMap(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(400.dp),
+            cameraPositionState = cameraPositionState,
+            properties = MapProperties(isMyLocationEnabled = hasLocationPermission),
+            uiSettings = MapUiSettings(
+                myLocationButtonEnabled = true,
+                zoomControlsEnabled = true,
+                compassEnabled = true
+            ),
+            onMapClick = { latLng ->
+                currentLocation = latLng
+                onLocationSelected(latLng.latitude, latLng.longitude)
+            },
+            onMyLocationButtonClick = {
+                // When user clicks "My Location" button, update the selected location
+                if (hasLocationPermission) {
+                    getCurrentLocation(context) { location ->
+                        currentLocation = location
+                        onLocationSelected(location.latitude, location.longitude)
+                    }
                 }
-            ) {
+                false // Return false to allow default behavior (camera centering)
+            }
+        ) {
+            // Marker for selected location
+            currentLocation?.let { location ->
                 Marker(
-                    state = MarkerState(position = currentLocation!!),
+                    state = MarkerState(position = location),
                     title = "Seçilen Konum"
                 )
             }
-            
-            Text(
-                text = "Haritada farklı bir konum seçmek için haritaya dokunun",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = 8.dp)
-            )
         }
+        
+        Text(
+            text = "Haritada farklı bir konum seçmek için haritaya dokunun. Mavi düğme ile konumunuzu alabilirsiniz.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = 8.dp)
+        )
     }
 
     // Location Permission Dialog
