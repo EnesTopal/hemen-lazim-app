@@ -15,6 +15,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import com.tpl.hemen_lazim.utils.EnumUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -26,7 +27,7 @@ fun <T : Enum<T>> EnumDropdown(
     error: String?
 ) {
     var expanded by remember { mutableStateOf(false) }
-    val text = selected?.name ?: ""
+    val text = selected?.let { EnumUtils.formatEnumDisplayName(it.name) } ?: ""
 
     Column(Modifier.fillMaxWidth()) {
         ExposedDropdownMenuBox(
@@ -58,7 +59,7 @@ fun <T : Enum<T>> EnumDropdown(
             ) {
                 values.forEach { v ->
                     DropdownMenuItem(
-                        text = { Text(v.name) },
+                        text = { Text(EnumUtils.formatEnumDisplayName(v.name)) },
                         onClick = {
                             onSelect(v)
                             expanded = false

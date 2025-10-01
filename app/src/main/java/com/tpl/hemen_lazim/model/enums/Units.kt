@@ -1,3 +1,3 @@
 package com.tpl.hemen_lazim.model.enums
 
-enum class Units { ADET, PAKET, KG, LITRE, KUTU, OTHER }
+enum class Units { PARÇA, ADET, PAKET, KG, LİTRE, KUTU, OTHER }

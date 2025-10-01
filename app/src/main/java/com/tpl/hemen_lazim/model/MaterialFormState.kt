@@ -8,7 +8,7 @@ data class MaterialFormState(
     val description: String = "",
     val category: Category? = null,
     val quantity: String = "",
-    val units: Units = Units.PARCA,
+    val units: Units = Units.PARÇA,
     val latitude: String = "",
     val longitude: String = "",
     val radiusMeters: String = "",
