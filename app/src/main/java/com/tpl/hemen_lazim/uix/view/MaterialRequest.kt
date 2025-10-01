@@ -27,6 +27,11 @@ import com.tpl.hemen_lazim.network.services.RequestService
 import com.tpl.hemen_lazim.uix.innerview.CreateForm
 import com.tpl.hemen_lazim.uix.innerview.EnumDropdown
 import com.tpl.hemen_lazim.uix.innerview.SegButton
+import com.tpl.hemen_lazim.uix.innerview.RadiusSlider
+import com.tpl.hemen_lazim.uix.innerview.RespondMapView
+import com.tpl.hemen_lazim.uix.innerview.RequestDetailDialog
+import com.tpl.hemen_lazim.uix.viewmodel.RespondViewModel
+import com.google.android.gms.maps.model.LatLng
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,11 +51,22 @@ fun MaterialRequest(navController: NavController) {
         val repo = remember { RequestRepository(api) }
         val vm = remember { MaterialRequestCreateViewModel(repo) }
         val ui by vm.ui.collectAsState()
+        
+        // Respond tab ViewModel
+        val respondVm = remember { RespondViewModel(repo) }
+        val respondUi by respondVm.ui.collectAsState()
 
         LaunchedEffect(ui.toastMessage) {
             ui.toastMessage?.let {
                 Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
                 vm.clearToast()
+            }
+        }
+        
+        LaunchedEffect(respondUi.toastMessage) {
+            respondUi.toastMessage?.let {
+                Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+                respondVm.clearToast()
             }
         }
 
@@ -95,35 +111,71 @@ fun MaterialRequest(navController: NavController) {
                     }
                 }
                 "respond" -> {
-                    // Placeholder for respond functionality
-                    Card(
+                    Column(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(8.dp)
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp)
+                        // Map with nearby requests
+                        RespondMapView(
+                            userLocation = if (respondUi.userLatitude != null && respondUi.userLongitude != null)
+                                LatLng(respondUi.userLatitude!!, respondUi.userLongitude!!)
+                            else null,
+                            radiusKm = respondUi.radiusKm,
+                            nearbyRequests = respondUi.nearbyRequests,
+                            onLocationReceived = { latLng ->
+                                respondVm.setUserLocation(latLng.latitude, latLng.longitude)
+                            },
+                            onRequestClick = { request ->
+                                respondVm.selectRequest(request)
+                            }
+                        )
+                        
+                        // Radius slider (below map)
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp)
                         ) {
-                            Text(
-                                text = "İstek Cevaplama",
-                                style = MaterialTheme.typography.titleMedium
+                            RadiusSlider(
+                                radiusKm = respondUi.radiusKm,
+                                onRadiusChange = { respondVm.setRadius(it) },
+                                modifier = Modifier.padding(16.dp)
                             )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = "Bu özellik yakında aktif olacak. Yakındaki talepleri görebilecek ve cevap verebileceksiniz.",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            
-                            // Placeholder for future features
-                            OutlinedButton(
-                                onClick = { /* TODO: Implement nearby requests */ },
+                        }
+                        
+                        // Requests count info
+                        if (respondUi.nearbyRequests.isNotEmpty()) {
+                            Card(
                                 modifier = Modifier.fillMaxWidth(),
-                                enabled = false
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                                )
                             ) {
-                                Text("Yakındaki Talepleri Göster")
+                                Text(
+                                    text = "${respondUi.nearbyRequests.size} talep bulundu",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    modifier = Modifier.padding(12.dp),
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
                             }
                         }
+                    }
+                    
+                    // Request detail dialog
+                    respondUi.selectedRequest?.let { request ->
+                        RequestDetailDialog(
+                            request = request,
+                            onDismiss = { respondVm.selectRequest(null) },
+                            onSupply = {
+                                // TODO: Navigate to chat with requester
+                                // For now just show toast and close dialog
+                                Toast.makeText(
+                                    context,
+                                    "Sohbet özelliği yakında eklenecek",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                respondVm.selectRequest(null)
+                            }
+                        )
                     }
                 }
             }
