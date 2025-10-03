@@ -1,5 +1,6 @@
 package com.tpl.hemen_lazim.uix.viewmodel
 
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -13,7 +14,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class AuthViewModel(
-    private val repo: AuthRepository = AuthRepository()
+    private val repo: AuthRepository = AuthRepository(),
+    private val context: Context? = null
 ) : ViewModel() {
 
     private val _ui = MutableStateFlow(AuthUiState())
@@ -65,7 +67,7 @@ class AuthViewModel(
             _ui.update { it.copy(isLoading = true, toastMessage = null, formError = null) }
 
             if (s.isLogin) {
-                val res = repo.login(CreateUserDTO(s.username, s.password))
+                val res = repo.login(CreateUserDTO(s.username, s.password), context)
                 if (res.isSuccess) {
                     _ui.update { it.copy(isLoading = false) }
                     onLoginSuccessNavigate()

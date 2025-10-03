@@ -1,10 +1,12 @@
 package com.tpl.hemen_lazim.network.repositories
 
+import android.content.Context
 import android.util.Log
 import com.tpl.hemen_lazim.model.DTOs.*
 import com.tpl.hemen_lazim.network.services.AuthService
 import com.tpl.hemen_lazim.network.RetrofitClient
 import com.tpl.hemen_lazim.utils.SharedPreferencesProvider
+import com.tpl.hemen_lazim.firebase.FirebaseTokenManager
 import org.json.JSONObject
 import retrofit2.HttpException
 import java.io.IOException
@@ -13,13 +15,25 @@ class AuthRepository(
     private val api: AuthService = RetrofitClient.retrofit.create(AuthService::class.java)
 ) {
 
-    suspend fun login(createUserDTO: CreateUserDTO): Result<Unit> {
+    suspend fun login(createUserDTO: CreateUserDTO, context: Context? = null): Result<Unit> {
         return try {
             val res = api.login(createUserDTO)
             if (res.isSuccessful) {
                 val tr = res.body()?.data
                 if (tr != null && tr.accessToken.isNotBlank() && tr.refreshToken.isNotBlank()) {
                     SharedPreferencesProvider.saveSession(tr.accessToken, tr.refreshToken)
+                    
+                    // Initialize FCM token after successful login
+                    context?.let {
+                        try {
+                            FirebaseTokenManager.initializeFcmToken(it)
+                            Log.d("AuthRepository", "FCM token initialization started")
+                        } catch (e: Exception) {
+                            Log.e("AuthRepository", "Failed to initialize FCM token", e)
+                            // Don't fail login if FCM token fails
+                        }
+                    }
+                    
                     Result.success(Unit)
                 } else {
                     Result.failure(IllegalStateException("Boş token(lar) döndü"))

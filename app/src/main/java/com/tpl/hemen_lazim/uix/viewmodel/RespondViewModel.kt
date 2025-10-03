@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tpl.hemen_lazim.model.DTOs.MaterialRequestDTO
 import com.tpl.hemen_lazim.network.repositories.RequestRepository
+import com.tpl.hemen_lazim.network.repositories.NotificationRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -16,11 +17,13 @@ data class RespondUiState(
     val nearbyRequests: List<MaterialRequestDTO> = emptyList(),
     val isLoading: Boolean = false,
     val toastMessage: String? = null,
-    val selectedRequest: MaterialRequestDTO? = null
+    val selectedRequest: MaterialRequestDTO? = null,
+    val isSendingNotification: Boolean = false
 )
 
 class RespondViewModel(
-    private val repo: RequestRepository
+    private val repo: RequestRepository,
+    private val notificationRepo: NotificationRepository = NotificationRepository()
 ) : ViewModel() {
 
     private val _ui = MutableStateFlow(RespondUiState())
@@ -73,6 +76,29 @@ class RespondViewModel(
                 it.copy(
                     isLoading = false,
                     toastMessage = result.exceptionOrNull()?.message ?: "İstekler yüklenemedi"
+                )
+            }
+        }
+    }
+    
+    fun sendSupplyOfferNotification(requestId: String, requesterId: String, onSuccess: () -> Unit) = viewModelScope.launch {
+        _ui.update { it.copy(isSendingNotification = true) }
+        
+        val result = notificationRepo.sendSupplyOfferNotification(requestId, requesterId)
+        
+        if (result.isSuccess) {
+            _ui.update { 
+                it.copy(
+                    isSendingNotification = false,
+                    toastMessage = "Bildirim gönderildi"
+                )
+            }
+            onSuccess()
+        } else {
+            _ui.update { 
+                it.copy(
+                    isSendingNotification = false,
+                    toastMessage = result.exceptionOrNull()?.message ?: "Bildirim gönderilemedi"
                 )
             }
         }

@@ -166,14 +166,29 @@ fun MaterialRequest(navController: NavController) {
                             request = request,
                             onDismiss = { respondVm.selectRequest(null) },
                             onSupply = {
-                                // TODO: Navigate to chat with requester
-                                // For now just show toast and close dialog
-                                Toast.makeText(
-                                    context,
-                                    "Sohbet özelliği yakında eklenecek",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                                respondVm.selectRequest(null)
+                                // Send notification to requester
+                                request.requesterId?.let { requesterId ->
+                                    respondVm.sendSupplyOfferNotification(
+                                        requestId = request.id,
+                                        requesterId = requesterId,
+                                        onSuccess = {
+                                            // TODO: Navigate to chat with requester
+                                            // For now just show success toast and close dialog
+                                            Toast.makeText(
+                                                context,
+                                                "Talep sahibine bildirim gönderildi. Sohbet özelliği yakında eklenecek.",
+                                                Toast.LENGTH_LONG
+                                            ).show()
+                                            respondVm.selectRequest(null)
+                                        }
+                                    )
+                                } ?: run {
+                                    Toast.makeText(
+                                        context,
+                                        "Talep sahibi bilgisi bulunamadı",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
                             }
                         )
                     }

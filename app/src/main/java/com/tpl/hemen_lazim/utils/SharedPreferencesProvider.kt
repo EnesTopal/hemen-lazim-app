@@ -11,6 +11,7 @@ object SharedPreferencesProvider {
     private const val PREF_NAME = "MyToken"
     private const val ACCESS_TOKEN_KEY = "access_token"
     private const val REFRESH_TOKEN_KEY = "refresh_token"
+    private const val FCM_TOKEN_KEY = "fcm_token"
 
     fun init(context: Context) {
         if (sharedPreferences == null) {
@@ -42,6 +43,11 @@ object SharedPreferencesProvider {
     fun saveToken(token: String) = sharedPreferences?.edit()?.putString(ACCESS_TOKEN_KEY, token)?.apply()
     fun getToken(): String? = getAccessToken()
     fun clearToken() = sharedPreferences?.edit()?.remove(ACCESS_TOKEN_KEY)?.apply()
+    
+    // FCM Token methods
+    fun saveFcmToken(token: String) = sharedPreferences?.edit()?.putString(FCM_TOKEN_KEY, token)?.apply()
+    fun getFcmToken(): String? = sharedPreferences?.getString(FCM_TOKEN_KEY, null)
+    fun clearFcmToken() = sharedPreferences?.edit()?.remove(FCM_TOKEN_KEY)?.apply()
 
 
     fun accessTokenExpSeconds(): Long? = getAccessToken()?.let { getTokenExpirationTime(it) }

@@ -16,13 +16,13 @@ import com.tpl.hemen_lazim.utils.DoubleBackToExit
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Auth(
-    navController: NavController,
-    vm: AuthViewModel = viewModel()
+    navController: NavController
 ) {
     DoubleBackToExit()
 
-    val ui by vm.ui.collectAsState()
     val context = LocalContext.current
+    val vm: AuthViewModel = remember { AuthViewModel(context = context) }
+    val ui by vm.ui.collectAsState()
 
     LaunchedEffect(ui.toastMessage) {
         ui.toastMessage?.let {
