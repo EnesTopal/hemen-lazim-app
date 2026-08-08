@@ -65,6 +65,11 @@ dependencies {
     implementation ("com.google.code.gson:gson:2.13.1")
     implementation("androidx.compose.material:material-icons-extended:1.7.8")
 
+    // WebSocket / STOMP
+    implementation("com.github.NaikSoftware:StompProtocolAndroid:1.6.6")
+    implementation("io.reactivex.rxjava2:rxandroid:2.1.1")
+    implementation("io.reactivex.rxjava2:rxjava:2.2.21")
+
 //    implementation("androidx.core:core-splashscreen:1.0.1")
     implementation("androidx.media:media:1.7.1")
     

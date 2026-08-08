@@ -3,27 +3,29 @@ package com.tpl.hemen_lazim.uix.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tpl.hemen_lazim.model.DTOs.MaterialRequestDTO
-import com.tpl.hemen_lazim.network.repositories.RequestRepository
+import com.tpl.hemen_lazim.network.repositories.ChatRepository
 import com.tpl.hemen_lazim.network.repositories.NotificationRepository
+import com.tpl.hemen_lazim.network.repositories.RequestRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class RespondUiState(
-    val radiusKm: Float = 0.5f,
-    val userLatitude: Double? = null,
-    val userLongitude: Double? = null,
-    val nearbyRequests: List<MaterialRequestDTO> = emptyList(),
-    val isLoading: Boolean = false,
-    val toastMessage: String? = null,
-    val selectedRequest: MaterialRequestDTO? = null,
-    val isSendingNotification: Boolean = false
+        val radiusKm: Float = 0.5f,
+        val userLatitude: Double? = null,
+        val userLongitude: Double? = null,
+        val nearbyRequests: List<MaterialRequestDTO> = emptyList(),
+        val isLoading: Boolean = false,
+        val toastMessage: String? = null,
+        val selectedRequest: MaterialRequestDTO? = null,
+        val isSendingNotification: Boolean = false
 )
 
 class RespondViewModel(
-    private val repo: RequestRepository,
-    private val notificationRepo: NotificationRepository = NotificationRepository()
+        private val repo: RequestRepository,
+        private val notificationRepo: NotificationRepository = NotificationRepository(),
+        private val chatRepo: ChatRepository = ChatRepository()
 ) : ViewModel() {
 
     private val _ui = MutableStateFlow(RespondUiState())
@@ -48,59 +50,73 @@ class RespondViewModel(
         _ui.update { it.copy(toastMessage = null) }
     }
 
-    fun fetchNearbyRequests() = viewModelScope.launch {
-        val state = _ui.value
-        if (state.userLatitude == null || state.userLongitude == null) {
-            return@launch
-        }
+    fun fetchNearbyRequests() =
+            viewModelScope.launch {
+                val state = _ui.value
+                if (state.userLatitude == null || state.userLongitude == null) {
+                    return@launch
+                }
 
-        _ui.update { it.copy(isLoading = true) }
+                _ui.update { it.copy(isLoading = true) }
 
-        val radiusMeters = (state.radiusKm * 1000).toInt()
-        val result = repo.listNearby(
-            lat = state.userLatitude,
-            lng = state.userLongitude,
-            radius = radiusMeters,
-            category = null // Search all categories
-        )
+                val radiusMeters = (state.radiusKm * 1000).toInt()
+                val result =
+                        repo.listNearby(
+                                lat = state.userLatitude,
+                                lng = state.userLongitude,
+                                radius = radiusMeters,
+                                category = null // Search all categories
+                        )
 
-        if (result.isSuccess) {
-            _ui.update {
-                it.copy(
-                    nearbyRequests = result.getOrNull() ?: emptyList(),
-                    isLoading = false
-                )
+                if (result.isSuccess) {
+                    _ui.update {
+                        it.copy(
+                                nearbyRequests = result.getOrNull() ?: emptyList(),
+                                isLoading = false
+                        )
+                    }
+                } else {
+                    _ui.update {
+                        it.copy(
+                                isLoading = false,
+                                toastMessage = result.exceptionOrNull()?.message
+                                                ?: "İstekler yüklenemedi"
+                        )
+                    }
+                }
             }
-        } else {
-            _ui.update {
-                it.copy(
-                    isLoading = false,
-                    toastMessage = result.exceptionOrNull()?.message ?: "İstekler yüklenemedi"
-                )
+
+    fun sendSupplyOfferNotification(requestId: String, requesterId: String, onSuccess: () -> Unit) =
+            viewModelScope.launch {
+                _ui.update { it.copy(isSendingNotification = true) }
+
+                val result = notificationRepo.sendSupplyOfferNotification(requestId, requesterId)
+
+                if (result.isSuccess) {
+                    _ui.update {
+                        it.copy(isSendingNotification = false, toastMessage = "Bildirim gönderildi")
+                    }
+                    onSuccess()
+                } else {
+                    _ui.update {
+                        it.copy(
+                                isSendingNotification = false,
+                                toastMessage = result.exceptionOrNull()?.message
+                                                ?: "Bildirim gönderilemedi"
+                        )
+                    }
+                }
             }
-        }
-    }
-    
-    fun sendSupplyOfferNotification(requestId: String, requesterId: String, onSuccess: () -> Unit) = viewModelScope.launch {
-        _ui.update { it.copy(isSendingNotification = true) }
-        
-        val result = notificationRepo.sendSupplyOfferNotification(requestId, requesterId)
-        
-        if (result.isSuccess) {
-            _ui.update { 
-                it.copy(
-                    isSendingNotification = false,
-                    toastMessage = "Bildirim gönderildi"
-                )
+
+    fun createChatRoom(senderId: String, recipientId: String, onSuccess: (String) -> Unit) =
+            viewModelScope.launch {
+                try {
+                    val roomId = chatRepo.createRoom(senderId, recipientId)
+                    onSuccess(roomId)
+                } catch (e: Exception) {
+                    _ui.update {
+                        it.copy(toastMessage = "Sohbet odası oluşturulamadı: ${e.message}")
+                    }
+                }
             }
-            onSuccess()
-        } else {
-            _ui.update { 
-                it.copy(
-                    isSendingNotification = false,
-                    toastMessage = result.exceptionOrNull()?.message ?: "Bildirim gönderilemedi"
-                )
-            }
-        }
-    }
 }
