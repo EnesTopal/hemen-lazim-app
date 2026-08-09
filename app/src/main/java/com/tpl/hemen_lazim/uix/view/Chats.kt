@@ -51,6 +51,7 @@ fun Chats(navController: NavController, viewModel: ChatsViewModel = viewModel())
                         ChatItem(
                                 message = message,
                                 currentUserId = ui.currentUserId,
+                                userNames = ui.userNames,
                                 onClick = {
                                     val otherUserId =
                                             if (message.senderId == ui.currentUserId)
@@ -69,9 +70,15 @@ fun Chats(navController: NavController, viewModel: ChatsViewModel = viewModel())
 }
 
 @Composable
-fun ChatItem(message: Message, currentUserId: String, onClick: () -> Unit) {
+fun ChatItem(
+        message: Message,
+        currentUserId: String,
+        userNames: Map<String, String>,
+        onClick: () -> Unit
+) {
     val otherUserId =
             if (message.senderId == currentUserId) message.recipientId else message.senderId
+    val otherUserName = userNames[otherUserId] ?: otherUserId
     val date = Date(message.serverTimestamp)
     val format = SimpleDateFormat("dd MMM HH:mm", Locale.getDefault())
 
@@ -92,10 +99,7 @@ fun ChatItem(message: Message, currentUserId: String, onClick: () -> Unit) {
             )
             Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                        text = otherUserId, // Ideally fetch user name here
-                        style = MaterialTheme.typography.titleMedium
-                )
+                Text(text = otherUserName, style = MaterialTheme.typography.titleMedium)
                 Text(
                         text = message.content,
                         style = MaterialTheme.typography.bodyMedium,

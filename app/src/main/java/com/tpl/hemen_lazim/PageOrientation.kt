@@ -62,7 +62,12 @@ fun PageOrientation(deepLinkRoomId: String? = null, deepLinkOtherUserId: String?
             val userId = backStackEntry.arguments?.getString("userId") ?: ""
             val recipientId = backStackEntry.arguments?.getString("recipientId") ?: ""
 
-            ChatScreen(roomId = roomId, userId = userId, recipientId = recipientId)
+            ChatScreen(
+                    navController = navController,
+                    roomId = roomId,
+                    userId = userId,
+                    recipientId = recipientId
+            )
         }
     }
 }

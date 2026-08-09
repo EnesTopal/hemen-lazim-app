@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
@@ -16,11 +17,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.tpl.hemen_lazim.model.Message
 import com.tpl.hemen_lazim.model.MessageStatus
+import com.tpl.hemen_lazim.model.uiKey
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatScreen(
+        navController: NavController,
         roomId: String,
         userId: String,
         recipientId: String,
@@ -30,28 +35,57 @@ fun ChatScreen(
 
     val messages by viewModel.messages.collectAsState()
     val isLoadingMore by viewModel.isLoadingMore.collectAsState()
-    val hasMoreHistory by viewModel.hasMoreHistory.collectAsState()
+    val otherUserName by viewModel.otherUserName.collectAsState()
     val listState = rememberLazyListState()
     var inputText by remember { mutableStateOf("") }
 
-    // Kullanıcı listenin başına yaklaşınca bir önceki sayfayı yükle
-    LaunchedEffect(listState, hasMoreHistory) {
+    // Kullanıcı listenin başına yaklaşınca bir önceki sayfayı yükle.
+    // Guard'lar bilinçli olarak loadMoreHistory() içinde: burada okunsalardı
+    // collect lambda'sı ilk kompozisyondaki bayat değerleri yakalardı.
+    LaunchedEffect(listState) {
         snapshotFlow { listState.firstVisibleItemIndex }
                 .collect { firstVisible ->
-                    if (firstVisible <= 2 && hasMoreHistory && !isLoadingMore) {
-                        viewModel.loadMoreHistory()
-                    }
+                    if (firstVisible <= 2) viewModel.loadMoreHistory()
                 }
     }
 
-    // Yeni mesaj eklendiğinde en alta kaydır (en yeni mesaj her zaman altta)
-    LaunchedEffect(messages.size) {
+    // En alta yalnızca listenin SONUNA bir şey eklendiğinde kaydır. messages.size'ı
+    // dinlemek yanlış olurdu: yukarı kaydırıp geçmiş yüklendiğinde de boyut büyür ve
+    // kullanıcı okuduğu yerden en alta fırlatılırdı.
+    val lastMessageKey = messages.lastOrNull()?.uiKey
+    LaunchedEffect(lastMessageKey) {
         if (messages.isNotEmpty()) {
             listState.animateScrollToItem(messages.size - 1)
         }
     }
 
-    Column(modifier = Modifier.fillMaxSize().background(Color(0xFFF5F5F5))) {
+    Scaffold(
+            topBar = {
+                TopAppBar(
+                        title = {
+                            Text(
+                                    text = otherUserName,
+                                    maxLines = 1,
+                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                            )
+                        },
+                        navigationIcon = {
+                            IconButton(onClick = { navController.popBackStack() }) {
+                                Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                        contentDescription = "Geri"
+                                )
+                            }
+                        }
+                )
+            }
+    ) { scaffoldPadding ->
+    Column(
+            modifier =
+                    Modifier.fillMaxSize()
+                            .padding(scaffoldPadding)
+                            .background(Color(0xFFF5F5F5))
+    ) {
         LazyColumn(
                 state = listState,
                 modifier = Modifier.weight(1f).fillMaxWidth().padding(8.dp),
@@ -67,7 +101,7 @@ fun ChatScreen(
                     }
                 }
             }
-            items(messages, key = { it.clientId }) { message ->
+            items(messages, key = { it.uiKey }) { message ->
                 MessageItem(
                         message = message,
                         isOwnMessage = message.senderId == userId,
@@ -115,6 +149,7 @@ fun ChatScreen(
                 )
             }
         }
+    }
     }
 }
 
