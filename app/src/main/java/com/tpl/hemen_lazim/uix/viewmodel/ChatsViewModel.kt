@@ -3,7 +3,9 @@ package com.tpl.hemen_lazim.uix.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tpl.hemen_lazim.model.Message
+import com.tpl.hemen_lazim.network.WebSocketManager
 import com.tpl.hemen_lazim.network.repositories.ChatRepository
+import com.tpl.hemen_lazim.network.repositories.ChatUnreadStore
 import com.tpl.hemen_lazim.network.repositories.UserRepository
 import com.tpl.hemen_lazim.utils.SharedPreferencesProvider
 import kotlinx.coroutines.async
@@ -34,6 +36,11 @@ class ChatsViewModel(
         if (userId != null) {
             _ui.update { it.copy(currentUserId = userId) }
             fetchChats(userId)
+        }
+        // Canlı mesaj geldiğinde listeyi tazele: aksi halde yeni mesaj ancak odaya
+        // girip çıkınca listede görünürdü.
+        viewModelScope.launch {
+            WebSocketManager.incomingMessages.collect { refresh() }
         }
     }
 
@@ -66,5 +73,6 @@ class ChatsViewModel(
         if (userId.isNotEmpty()) {
             fetchChats(userId)
         }
+        ChatUnreadStore.refresh()
     }
 }

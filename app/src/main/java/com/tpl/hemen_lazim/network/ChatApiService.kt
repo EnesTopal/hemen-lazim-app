@@ -35,4 +35,12 @@ interface ChatApiService {
     suspend fun getUserChats(
         @Query("userId") userId: String
     ): List<Message>
+
+    // Oda -> okunmamış mesaj sayısı. Okunma durumu sunucuda tutulduğu için
+    // uygulama kapatılıp açıldığında da doğru sonuç verir.
+    @GET("/api/chat/unread")
+    suspend fun getUnreadCounts(): Map<String, Int>
+
+    @POST("/api/chat/read")
+    suspend fun markRoomRead(@Query("roomId") roomId: String)
 }

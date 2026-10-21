@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.tpl.hemen_lazim.model.Message
 import com.tpl.hemen_lazim.model.MessageStatus
 import com.tpl.hemen_lazim.network.repositories.ChatRepository
+import com.tpl.hemen_lazim.network.repositories.ChatUnreadStore
 import com.tpl.hemen_lazim.network.repositories.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -42,6 +43,7 @@ class ChatViewModel(
                 if (message.roomId == currentRoomId) {
                     merge(listOf(message))
                     if (message.id > lastReceivedId) lastReceivedId = message.id
+                    ChatUnreadStore.markRoomRead(currentRoomId)
                 }
             }
         }
@@ -63,6 +65,8 @@ class ChatViewModel(
         recipientId = otherUserId
         _otherUserName.value = otherUserId
         repository.connect()
+        // Bu oda ekranda açık: gelen mesajlar okunmamış sayılmasın, bekleyenler temizlensin
+        ChatUnreadStore.setActiveRoom(roomId)
         loadInitialHistory()
         viewModelScope.launch { _otherUserName.value = userRepository.getUserName(otherUserId) }
     }
@@ -108,15 +112,22 @@ class ChatViewModel(
         }
     }
 
-    private fun resync() =
+    /**
+     * Kaçırılmış mesajları sunucudan tamamlar. Hem yeniden bağlanınca hem de ekran
+     * açıkken periyodik olarak çağrılır: canlı teslimat WebSocket'e bağlı olduğu için
+     * soketin sessizce düşmesi durumunda ekranın donmaması gerekiyor. Sunucu bu isteği
+     * üst sınırla yanıtlıyor, dolayısıyla lastReceivedId=0 olsa bile güvenli.
+     */
+    fun resync() =
             viewModelScope.launch {
-                // Henüz hiç mesaj görmediysek ilk geçmiş yüklemesi zaten her şeyi getiriyor;
-                // 0'dan sync istemek tüm odayı çekmek olurdu.
-                if (lastReceivedId == 0L) return@launch
+                if (currentRoomId.isEmpty()) return@launch
                 try {
                     val missing = repository.syncMessages(currentRoomId, lastReceivedId)
+                    if (missing.isEmpty()) return@launch
                     merge(missing)
                     missing.forEach { if (it.id > lastReceivedId) lastReceivedId = it.id }
+                    // Ekran açıkken gelen mesajlar okunmuş sayılır
+                    ChatUnreadStore.markRoomRead(currentRoomId)
                 } catch (e: Exception) {
                     Log.e("ChatViewModel", "Resync başarısız", e)
                 }
@@ -191,7 +202,9 @@ class ChatViewModel(
 
     override fun onCleared() {
         super.onCleared()
-        repository.disconnect()
+        // Soket bilerek kapatılmıyor: uygulama ömrüne ait ve sohbet listesi ile
+        // alt bardaki rozet bu ekran kapandıktan sonra da canlı sinyale ihtiyaç duyuyor.
+        ChatUnreadStore.setActiveRoom(null)
     }
 
     companion object {

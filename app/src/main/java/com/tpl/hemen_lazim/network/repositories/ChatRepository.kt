@@ -8,17 +8,13 @@ import kotlinx.coroutines.flow.SharedFlow
 
 class ChatRepository {
     private val apiService = RetrofitClient.retrofit.create(ChatApiService::class.java)
-    private val webSocketManager = WebSocketManager()
 
-    val incomingMessages: SharedFlow<Message> get() = webSocketManager.incomingMessages
-    val connectionEvents: SharedFlow<Boolean> get() = webSocketManager.connectionEvents
+    // Soket uygulama ömrüne ait; burada oluşturulmuyor, yalnızca kullanılıyor
+    val incomingMessages: SharedFlow<Message> get() = WebSocketManager.incomingMessages
+    val connectionEvents: SharedFlow<Boolean> get() = WebSocketManager.connectionEvents
 
     fun connect() {
-        webSocketManager.connect(RetrofitClient.WS_URL)
-    }
-
-    fun disconnect() {
-        webSocketManager.disconnect()
+        WebSocketManager.connect()
     }
 
     // Güvenilir gönderim: REST üzerinden, sunucunun atadığı gerçek id + serverTimestamp ile döner

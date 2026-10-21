@@ -1,19 +1,24 @@
 package com.tpl.hemen_lazim.uix.view
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.tpl.hemen_lazim.model.Message
+import com.tpl.hemen_lazim.network.repositories.ChatUnreadStore
 import com.tpl.hemen_lazim.uix.innerview.ScreenScaffold
 import com.tpl.hemen_lazim.uix.viewmodel.ChatsViewModel
 import java.text.SimpleDateFormat
@@ -23,6 +28,7 @@ import java.util.*
 @Composable
 fun Chats(navController: NavController, viewModel: ChatsViewModel = viewModel()) {
     val ui by viewModel.ui.collectAsState()
+    val unreadByRoom by ChatUnreadStore.unreadByRoom.collectAsState()
 
     // Refresh on resume
     LaunchedEffect(Unit) { viewModel.refresh() }
@@ -52,6 +58,7 @@ fun Chats(navController: NavController, viewModel: ChatsViewModel = viewModel())
                                 message = message,
                                 currentUserId = ui.currentUserId,
                                 userNames = ui.userNames,
+                                hasUnread = (unreadByRoom[message.roomId] ?: 0) > 0,
                                 onClick = {
                                     val otherUserId =
                                             if (message.senderId == ui.currentUserId)
@@ -74,6 +81,7 @@ fun ChatItem(
         message: Message,
         currentUserId: String,
         userNames: Map<String, String>,
+        hasUnread: Boolean,
         onClick: () -> Unit
 ) {
     val otherUserId =
@@ -99,7 +107,21 @@ fun ChatItem(
             )
             Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(text = otherUserName, style = MaterialTheme.typography.titleMedium)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                            text = otherUserName,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = if (hasUnread) FontWeight.Bold else null
+                    )
+                    if (hasUnread) {
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Box(
+                                modifier =
+                                        Modifier.size(9.dp)
+                                                .background(Color.Red, CircleShape)
+                        )
+                    }
+                }
                 Text(
                         text = message.content,
                         style = MaterialTheme.typography.bodyMedium,

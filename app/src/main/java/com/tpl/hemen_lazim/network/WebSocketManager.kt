@@ -20,114 +20,148 @@ import ua.naiksoftware.stomp.dto.LifecycleEvent
 import ua.naiksoftware.stomp.dto.StompHeader
 
 /**
- * WebSocket burada sadece CANLI TESLİMAT içindir (karşı taraf o an bağlıysa anlık düşer).
- * Mesaj GÖNDERİMİ artık REST üzerinden (ChatRepository.sendMessage) yapılır; socket'in
- * kapalı olması gönderimi etkilemez, sadece anlık teslimatı geciktirir — bağlantı
- * kurulduğunda/yeniden kurulduğunda [connectionEvents] tetiklenir ve çağıran taraf
- * bunu bir "sync" ile telafi eder.
+ * Uygulama ömrü boyunca yaşayan tek WebSocket bağlantısı.
+ *
+ * Bilerek singleton: sohbet ekranına bağlı olsaydı (eskiden öyleydi) sohbet listesi ve
+ * alt bardaki okunmamış rozeti canlı sinyal alamazdı — yeni mesaj ancak o odaya girip
+ * çıkınca görünürdü.
+ *
+ * Soket yalnızca CANLI TESLİMAT içindir. Gönderim REST üzerinden yapılır ve okunmamış
+ * durumu sunucuda tutulur; dolayısıyla soket kapalıyken de hiçbir şey kaybolmaz, sadece
+ * güncelleme anlık olmaz.
  */
-class WebSocketManager {
+object WebSocketManager {
+
+    private const val TAG = "WebSocketManager"
+    private const val INITIAL_RECONNECT_DELAY_MS = 2000L
+    private const val MAX_RECONNECT_DELAY_MS = 30000L
+
     private var mStompClient: StompClient? = null
     private val compositeDisposable = CompositeDisposable()
     private val gson = Gson()
     private val scope = CoroutineScope(SupervisorJob())
 
-    private var currentUrl: String? = null
+    private var currentUrl: String = RetrofitClient.WS_URL
     private var manuallyDisconnected = false
     private var reconnectJob: Job? = null
     private var reconnectDelayMs = INITIAL_RECONNECT_DELAY_MS
 
-    private val _incomingMessages = MutableSharedFlow<Message>(replay = 0, extraBufferCapacity = 16)
+    private val _incomingMessages = MutableSharedFlow<Message>(replay = 0, extraBufferCapacity = 64)
     val incomingMessages: SharedFlow<Message> = _incomingMessages
 
-    // true = bağlandı/yeniden bağlandı, false = koptu
+    /** true = bağlandı/yeniden bağlandı, false = koptu. */
     private val _connectionEvents = MutableSharedFlow<Boolean>(replay = 1, extraBufferCapacity = 4)
     val connectionEvents: SharedFlow<Boolean> = _connectionEvents
 
-    fun connect(url: String) {
+    /**
+     * Idempotent: zaten bağlıysa ya da bağlanmayı deniyorsa hiçbir şey yapmaz.
+     * Uygulama öne her geldiğinde güvenle çağrılabilir.
+     */
+    @Synchronized
+    fun connect(url: String = RetrofitClient.WS_URL) {
         manuallyDisconnected = false
         currentUrl = url
-        if (mStompClient != null && mStompClient!!.isConnected) return
+        if (mStompClient != null) return
         openConnection(url)
     }
 
+    @Synchronized
+    fun disconnect() {
+        manuallyDisconnected = true
+        reconnectJob?.cancel()
+        teardown()
+    }
+
+    private fun teardown() {
+        // Önce abonelikleri bırak, sonra kapat: aksi halde eski istemcinin CLOSED olayı
+        // bize geri döner ve gereksiz bir yeniden bağlanma tetikler.
+        compositeDisposable.clear()
+        mStompClient?.disconnect()
+        mStompClient = null
+    }
+
     private fun openConnection(url: String) {
+        teardown()
+
         val client = Stomp.over(Stomp.ConnectionProvider.OKHTTP, url)
         mStompClient = client
 
+        // ÖNEMLİ: lifecycle() replay'siz bir PublishSubject ve connect() soketi senkron
+        // kuruyor. Aboneliği connect()'ten SONRA yapmak, localhost/emülatör gibi hızlı
+        // ortamlarda OPENED olayını tamamen kaçırmak demek — bu yüzden önce abone oluyoruz.
+        compositeDisposable.add(
+                client.lifecycle()
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe { event ->
+                            when (event.type) {
+                                LifecycleEvent.Type.OPENED -> {
+                                    Log.d(TAG, "STOMP bağlantısı açıldı")
+                                    reconnectDelayMs = INITIAL_RECONNECT_DELAY_MS
+                                    _connectionEvents.tryEmit(true)
+                                }
+                                LifecycleEvent.Type.ERROR -> {
+                                    Log.e(TAG, "STOMP hatası", event.exception)
+                                    _connectionEvents.tryEmit(false)
+                                    scheduleReconnect()
+                                }
+                                LifecycleEvent.Type.CLOSED -> {
+                                    Log.d(TAG, "STOMP bağlantısı kapandı")
+                                    _connectionEvents.tryEmit(false)
+                                    scheduleReconnect()
+                                }
+                                else -> {}
+                            }
+                        }
+        )
+
+        compositeDisposable.add(
+                client.topic(USER_QUEUE)
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(
+                                { topicMessage ->
+                                    try {
+                                        val message =
+                                                gson.fromJson(
+                                                        topicMessage.payload,
+                                                        Message::class.java
+                                                )
+                                        Log.d(TAG, "Canlı mesaj alındı: id=${message.id}")
+                                        _incomingMessages.tryEmit(message)
+                                    } catch (e: Exception) {
+                                        Log.e(TAG, "Mesaj ayrıştırılamadı", e)
+                                    }
+                                },
+                                { error -> Log.e(TAG, "Abonelik hatası", error) }
+                        )
+        )
+
+        // Token her bağlantı denemesinde yeniden okunur; böylece yeniden bağlanmalar
+        // yenilenmiş access token'ı kullanır.
         val token = SharedPreferencesProvider.getAccessToken()
-        val headers = if (!token.isNullOrBlank()) {
-            listOf(StompHeader("Authorization", "Bearer $token"))
-        } else {
-            emptyList()
+        if (token.isNullOrBlank()) {
+            Log.w(TAG, "Token yok, STOMP bağlantısı kurulmuyor")
+            teardown()
+            return
         }
-        client.connect(headers)
-
-        val lifecycleDisposable = client.lifecycle()
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe { lifecycleEvent ->
-                when (lifecycleEvent.type) {
-                    LifecycleEvent.Type.OPENED -> {
-                        Log.d("WebSocket", "Stomp connection opened")
-                        reconnectDelayMs = INITIAL_RECONNECT_DELAY_MS
-                        _connectionEvents.tryEmit(true)
-                    }
-                    LifecycleEvent.Type.ERROR -> {
-                        Log.e("WebSocket", "Error", lifecycleEvent.exception)
-                        _connectionEvents.tryEmit(false)
-                        scheduleReconnect()
-                    }
-                    LifecycleEvent.Type.CLOSED -> {
-                        Log.d("WebSocket", "Stomp connection closed")
-                        _connectionEvents.tryEmit(false)
-                        scheduleReconnect()
-                    }
-                    else -> {}
-                }
-            }
-        compositeDisposable.add(lifecycleDisposable)
-
-        // Subscribe to user queue
-        val topicDisposable = client.topic("/user/queue/messages")
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe({ topicMessage ->
-                try {
-                    val message = gson.fromJson(topicMessage.payload, Message::class.java)
-                    _incomingMessages.tryEmit(message)
-                } catch (e: Exception) {
-                    Log.e("WebSocket", "Error parsing message", e)
-                }
-            }, { error ->
-                Log.e("WebSocket", "Error on subscribe", error)
-            })
-        compositeDisposable.add(topicDisposable)
+        client.connect(listOf(StompHeader("Authorization", "Bearer $token")))
     }
 
     private fun scheduleReconnect() {
         if (manuallyDisconnected) return
-        val url = currentUrl ?: return
         reconnectJob?.cancel()
-        reconnectJob = scope.launch {
-            delay(reconnectDelayMs)
-            reconnectDelayMs = (reconnectDelayMs * 2).coerceAtMost(MAX_RECONNECT_DELAY_MS)
-            if (!manuallyDisconnected) {
-                openConnection(url)
-            }
-        }
+        val delayMs = reconnectDelayMs
+        reconnectJob =
+                scope.launch {
+                    delay(delayMs)
+                    reconnectDelayMs = (delayMs * 2).coerceAtMost(MAX_RECONNECT_DELAY_MS)
+                    if (!manuallyDisconnected) {
+                        Log.d(TAG, "Yeniden bağlanılıyor...")
+                        synchronized(WebSocketManager) { openConnection(currentUrl) }
+                    }
+                }
     }
 
-    fun disconnect() {
-        manuallyDisconnected = true
-        reconnectJob?.cancel()
-        mStompClient?.disconnect()
-        compositeDisposable.clear()
-        mStompClient = null
-    }
-
-    companion object {
-        private const val INITIAL_RECONNECT_DELAY_MS = 2000L
-        private const val MAX_RECONNECT_DELAY_MS = 30000L
-    }
+    private const val USER_QUEUE = "/user/queue/messages"
 }

@@ -44,6 +44,9 @@ dependencies {
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    // Compose'da yaşam döngüsüne duyarlı efektler (uygulama öne gelince tazeleme,
+    // arka plandayken yoklamayı durdurma)
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.9.2")
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)

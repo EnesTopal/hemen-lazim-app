@@ -16,11 +16,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.tpl.hemen_lazim.model.Message
 import com.tpl.hemen_lazim.model.MessageStatus
 import com.tpl.hemen_lazim.model.uiKey
+import kotlinx.coroutines.delay
+
+private const val SYNC_INTERVAL_MS = 3000L
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,6 +44,19 @@ fun ChatScreen(
     val otherUserName by viewModel.otherUserName.collectAsState()
     val listState = rememberLazyListState()
     var inputText by remember { mutableStateOf("") }
+
+    // Emniyet ağı: canlı teslimat WebSocket'e bağlı ve soket sessizce düşebiliyor.
+    // Ekran öndeyken düzenli aralıkla sunucudan eksik mesaj var mı diye soruyoruz;
+    // soket sağlamken bu istekler boş döner, sohbet ekranı hiçbir koşulda donmaz.
+    val lifecycleOwner = LocalLifecycleOwner.current
+    LaunchedEffect(lifecycleOwner, roomId) {
+        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            while (true) {
+                delay(SYNC_INTERVAL_MS)
+                viewModel.resync()
+            }
+        }
+    }
 
     // Kullanıcı listenin başına yaklaşınca bir önceki sayfayı yükle.
     // Guard'lar bilinçli olarak loadMoreHistory() içinde: burada okunsalardı
