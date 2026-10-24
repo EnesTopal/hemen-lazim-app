@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 class MaterialRequestCreateViewModel(
     private val repo: RequestRepository
@@ -39,7 +40,7 @@ class MaterialRequestCreateViewModel(
             )
         }
     }
-    fun onRadius(v: String) = _ui.update { it.copy(radiusMeters = v, radiusError = null) }
+    fun onRadiusKm(v: Float) = _ui.update { it.copy(radiusKm = v) }
     fun onExpires(v: String) = _ui.update { it.copy(expiresAt = v, expiresError = null) }
     fun clearToast() = _ui.update { it.copy(toastMessage = null) }
 
@@ -71,13 +72,6 @@ class MaterialRequestCreateViewModel(
             _ui.update { it.copy(lonError = "Geçerli boylam girin") }; ok = false
         }
 
-        if (s.radiusMeters.isNotBlank()) {
-            val r = s.radiusMeters.toIntOrNull()
-            if (r == null || r <= 0) {
-                _ui.update { it.copy(radiusError = "Yarıçap pozitif olmalı") }; ok = false
-            }
-        }
-
         // expiresAt opsiyonel; formatı şimdilik serbest bırakıyoruz
         return ok
     }
@@ -96,7 +90,7 @@ class MaterialRequestCreateViewModel(
             units = s.units,
             latitude = s.latitude.toDouble(),
             longitude = s.longitude.toDouble(),
-            radiusMeters = s.radiusMeters.toIntOrNull(),
+            radiusMeters = (s.radiusKm * 1000).roundToInt(),
             expiresInHours = s.expiresAt.ifBlank { null }
         )
 

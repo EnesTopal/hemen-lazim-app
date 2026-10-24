@@ -120,17 +120,13 @@ fun MaterialRequest(navController: NavController) {
                                 onRequestClick = { request -> respondVm.selectRequest(request) }
                         )
 
-                        // Radius slider (below map)
-                        Card(
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(12.dp)
-                        ) {
-                            RadiusSlider(
-                                    radiusKm = respondUi.radiusKm,
-                                    onRadiusChange = { respondVm.setRadius(it) },
-                                    modifier = Modifier.padding(16.dp)
-                            )
-                        }
+                        // İlan açma ekranındakiyle aynı kaydırıcı
+                        RadiusSlider(
+                                title = "Arama alanı",
+                                radiusKm = respondUi.radiusKm,
+                                onRadiusChange = { respondVm.setRadius(it) },
+                                onRadiusChangeFinished = { respondVm.fetchNearbyRequests() }
+                        )
 
                         // Requests count info
                         if (respondUi.nearbyRequests.isNotEmpty()) {

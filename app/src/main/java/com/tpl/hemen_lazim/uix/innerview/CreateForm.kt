@@ -101,22 +101,12 @@ fun CreateForm(ui: MaterialFormState, vm: MaterialRequestCreateViewModel) {
     )
     Spacer(Modifier.height(10.dp))
 
-    OutlinedTextField(
-        value = ui.radiusMeters,
-        onValueChange = vm::onRadius,
-        label = { Text("Yarıçap (metre)") },
-        isError = ui.radiusError != null,
-        supportingText = {
-            ui.radiusError?.let {
-                Text(
-                    it,
-                    color = MaterialTheme.colorScheme.error
-                )
-            }
-        },
-        singleLine = true,
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-        modifier = Modifier.fillMaxWidth()
+    // Arama ekranıyla aynı kaydırıcı; eskiden metre cinsinden serbest metindi ve "2" yazan
+    // 2 km değil 2 m kaydediyordu
+    RadiusSlider(
+        title = "Talebin görüneceği alan",
+        radiusKm = ui.radiusKm,
+        onRadiusChange = vm::onRadiusKm
     )
     Spacer(Modifier.height(10.dp))
 

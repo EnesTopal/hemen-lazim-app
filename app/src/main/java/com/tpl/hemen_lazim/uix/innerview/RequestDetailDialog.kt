@@ -17,6 +17,7 @@ import androidx.compose.ui.window.Dialog
 import com.tpl.hemen_lazim.model.DTOs.MaterialRequestDTO
 import com.tpl.hemen_lazim.model.enums.toDisplayName
 import com.tpl.hemen_lazim.model.enums.toEmoji
+import com.tpl.hemen_lazim.utils.formatDistance
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -116,11 +117,17 @@ fun RequestDetailDialog(
                         value = request.requesterName ?: "Bilinmiyor"
                     )
                     
-                    if (request.radiusMeters != null) {
-                        val radiusKm = request.radiusMeters / 1000.0
+                    request.distanceMeters?.let { distance ->
                         DetailRow(
-                            label = "Yarıçap",
-                            value = String.format("%.1f km", radiusKm)
+                            label = "Uzaklık",
+                            value = formatDistance(distance)
+                        )
+                    }
+
+                    if (request.radiusMeters != null) {
+                        DetailRow(
+                            label = "Talebin alanı",
+                            value = formatDistance(request.radiusMeters.toDouble())
                         )
                     }
                     

@@ -18,5 +18,7 @@ data class MaterialRequestDTO(
     val radiusMeters: Int?,
     val status: RequestStatus,
     val expiresAt: String?,
-    val createdAt: String
+    val createdAt: String,
+    // Arayana uzaklık; yalnızca yakındaki talepler yanıtında dolu
+    val distanceMeters: Double? = null
 )

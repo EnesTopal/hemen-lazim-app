@@ -11,7 +11,7 @@ data class MaterialFormState(
     val units: Units = Units.PARCA,
     val latitude: String = "",
     val longitude: String = "",
-    val radiusMeters: String = "",
+    val radiusKm: Float = RequestLimits.DEFAULT_REQUEST_RADIUS_KM,
     val expiresAt: String = "",
     val titleError: String? = null,
     val categoryError: String? = null,
@@ -19,7 +19,6 @@ data class MaterialFormState(
     val unitError: String? = null,
     val latError: String? = null,
     val lonError: String? = null,
-    val radiusError: String? = null,
     val expiresError: String? = null,
     // UI
     val isSubmitting: Boolean = false,

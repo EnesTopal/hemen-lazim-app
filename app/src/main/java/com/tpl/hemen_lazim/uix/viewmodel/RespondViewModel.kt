@@ -3,16 +3,20 @@ package com.tpl.hemen_lazim.uix.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tpl.hemen_lazim.model.DTOs.MaterialRequestDTO
+import com.tpl.hemen_lazim.model.RequestLimits
 import com.tpl.hemen_lazim.network.repositories.ChatRepository
 import com.tpl.hemen_lazim.network.repositories.NotificationRepository
 import com.tpl.hemen_lazim.network.repositories.RequestRepository
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 data class RespondUiState(
-        val radiusKm: Float = 0.5f,
+        val radiusKm: Float = RequestLimits.DEFAULT_SEARCH_RADIUS_KM,
         val userLatitude: Double? = null,
         val userLongitude: Double? = null,
         val nearbyRequests: List<MaterialRequestDTO> = emptyList(),
@@ -36,10 +40,9 @@ class RespondViewModel(
         fetchNearbyRequests()
     }
 
+    // Sürüklerken yalnızca daire güncellenir; istek kaydırıcı bırakılınca atılır
     fun setRadius(radiusKm: Float) {
         _ui.update { it.copy(radiusKm = radiusKm) }
-        // Auto-fetch when radius changes
-        fetchNearbyRequests()
     }
 
     fun selectRequest(request: MaterialRequestDTO?) {
@@ -50,41 +53,51 @@ class RespondViewModel(
         _ui.update { it.copy(toastMessage = null) }
     }
 
-    fun fetchNearbyRequests() =
-            viewModelScope.launch {
-                val state = _ui.value
-                if (state.userLatitude == null || state.userLongitude == null) {
-                    return@launch
-                }
+    // Yalnızca son istek sonucu yazar: konum ya da yarıçap hızlı değişince öncekiler iptal edilir,
+    // geç gelen eski bir yanıt yenisinin üstüne yazamaz
+    private var fetchJob: Job? = null
 
-                _ui.update { it.copy(isLoading = true) }
-
-                val radiusMeters = (state.radiusKm * 1000).toInt()
-                val result =
-                        repo.listNearby(
-                                lat = state.userLatitude,
-                                lng = state.userLongitude,
-                                radius = radiusMeters,
-                                category = null // Search all categories
-                        )
-
-                if (result.isSuccess) {
-                    _ui.update {
-                        it.copy(
-                                nearbyRequests = result.getOrNull() ?: emptyList(),
-                                isLoading = false
-                        )
+    fun fetchNearbyRequests() {
+        fetchJob?.cancel()
+        fetchJob =
+                viewModelScope.launch {
+                    val state = _ui.value
+                    if (state.userLatitude == null || state.userLongitude == null) {
+                        return@launch
                     }
-                } else {
-                    _ui.update {
-                        it.copy(
-                                isLoading = false,
-                                toastMessage = result.exceptionOrNull()?.message
-                                                ?: "İstekler yüklenemedi"
-                        )
+
+                    _ui.update { it.copy(isLoading = true) }
+
+                    val radiusMeters = (state.radiusKm * 1000).roundToInt()
+                    val result =
+                            repo.listNearby(
+                                    lat = state.userLatitude,
+                                    lng = state.userLongitude,
+                                    radius = radiusMeters,
+                                    category = null // Search all categories
+                            )
+                    // Depo iptali de Result.failure olarak döndürüyor; iptal edilen istek ne
+                    // sonuç ne de "iptal edildi" toast'ı yazsın
+                    ensureActive()
+
+                    if (result.isSuccess) {
+                        _ui.update {
+                            it.copy(
+                                    nearbyRequests = result.getOrNull() ?: emptyList(),
+                                    isLoading = false
+                            )
+                        }
+                    } else {
+                        _ui.update {
+                            it.copy(
+                                    isLoading = false,
+                                    toastMessage = result.exceptionOrNull()?.message
+                                                    ?: "İstekler yüklenemedi"
+                            )
+                        }
                     }
                 }
-            }
+    }
 
     fun sendSupplyOfferNotification(requestId: String, requesterId: String, onSuccess: () -> Unit) =
             viewModelScope.launch {
