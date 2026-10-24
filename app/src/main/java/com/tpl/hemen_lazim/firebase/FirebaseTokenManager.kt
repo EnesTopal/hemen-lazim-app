@@ -19,7 +19,7 @@ object FirebaseTokenManager {
     suspend fun initializeFcmToken(context: Context): String? {
         return try {
             val token = FirebaseMessaging.getInstance().token.await()
-            Log.d(TAG, "FCM Token obtained: $token")
+            Log.d(TAG, "FCM token obtained")
             
             // Initialize SharedPreferences
             SharedPreferencesProvider.init(context)

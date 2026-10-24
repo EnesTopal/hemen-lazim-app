@@ -1,6 +1,5 @@
 package com.tpl.hemen_lazim
 
-import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -23,9 +22,6 @@ import com.tpl.hemen_lazim.utils.SharedPreferencesProvider
 fun PageOrientation(deepLinkRoomId: String? = null, deepLinkOtherUserId: String? = null) {
     val navController = rememberNavController()
     val context = LocalContext.current
-
-    val token = SharedPreferencesProvider.getAccessToken()
-    Log.e("PageOrientation", "Token: $token")
 
     NavHost(navController = navController, startDestination = "Splash") {
         composable("Splash") {

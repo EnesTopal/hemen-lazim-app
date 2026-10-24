@@ -34,7 +34,7 @@ class HemenLazimFirebaseMessagingService : FirebaseMessagingService() {
 
     override fun onNewToken(token: String) {
         super.onNewToken(token)
-        Log.d(TAG, "New FCM token: $token")
+        Log.d(TAG, "New FCM token received")
         
         // Initialize SharedPreferences
         SharedPreferencesProvider.init(this)
