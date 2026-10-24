@@ -46,6 +46,10 @@ object WebSocketManager {
     private var reconnectJob: Job? = null
     private var reconnectDelayMs = INITIAL_RECONNECT_DELAY_MS
 
+    // Açık soketin hangi hesap adına kurulduğu. Sunucu kimliği CONNECT anında sabitliyor;
+    // aynı cihazda başka hesapla girilince eski soket önceki hesabın mesajlarını getirirdi.
+    private var connectedUserId: String? = null
+
     private val _incomingMessages = MutableSharedFlow<Message>(replay = 0, extraBufferCapacity = 64)
     val incomingMessages: SharedFlow<Message> = _incomingMessages
 
@@ -54,14 +58,15 @@ object WebSocketManager {
     val connectionEvents: SharedFlow<Boolean> = _connectionEvents
 
     /**
-     * Idempotent: zaten bağlıysa ya da bağlanmayı deniyorsa hiçbir şey yapmaz.
-     * Uygulama öne her geldiğinde güvenle çağrılabilir.
+     * Idempotent: aynı hesap için zaten bağlıysa ya da bağlanmayı deniyorsa hiçbir şey yapmaz.
+     * Uygulama öne her geldiğinde güvenle çağrılabilir. Hesap değiştiyse soket yeniden kurulur;
+     * bu, oturum token yenileme hatasıyla düştüğünde (çıkış yapılmadan) de geçerli.
      */
     @Synchronized
     fun connect(url: String = RetrofitClient.WS_URL) {
         manuallyDisconnected = false
         currentUrl = url
-        if (mStompClient != null) return
+        if (mStompClient != null && connectedUserId == SharedPreferencesProvider.getUserId()) return
         openConnection(url)
     }
 
@@ -78,6 +83,7 @@ object WebSocketManager {
         compositeDisposable.clear()
         mStompClient?.disconnect()
         mStompClient = null
+        connectedUserId = null
     }
 
     private fun openConnection(url: String) {
@@ -145,6 +151,7 @@ object WebSocketManager {
             teardown()
             return
         }
+        connectedUserId = SharedPreferencesProvider.getUserId()
         client.connect(listOf(StompHeader("Authorization", "Bearer $token")))
     }
 

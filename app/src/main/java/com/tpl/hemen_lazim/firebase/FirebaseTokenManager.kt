@@ -8,6 +8,7 @@ import com.tpl.hemen_lazim.utils.SharedPreferencesProvider
 import com.tpl.hemen_lazim.network.RetrofitClient
 import com.tpl.hemen_lazim.network.services.NotificationService
 import com.tpl.hemen_lazim.model.DTOs.DeviceRegisterRequestDTO
+import com.tpl.hemen_lazim.model.DTOs.DeviceUnregisterRequestDTO
 import kotlinx.coroutines.tasks.await
 
 object FirebaseTokenManager {
@@ -62,6 +63,29 @@ object FirebaseTokenManager {
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error registering device", e)
+            false
+        }
+    }
+
+    /**
+     * Unregister this device from the current account - call on logout,
+     * before the access token is cleared (the endpoint is authenticated)
+     */
+    suspend fun unregisterFromServer(): Boolean {
+        val token = SharedPreferencesProvider.getFcmToken() ?: return false
+        return try {
+            val service = RetrofitClient.retrofit.create(NotificationService::class.java)
+            val response = service.unregisterDevice(DeviceUnregisterRequestDTO(fcmToken = token))
+
+            if (response.isSuccessful) {
+                Log.d(TAG, "Device unregistered")
+                true
+            } else {
+                Log.e(TAG, "Failed to unregister device: ${response.code()}")
+                false
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error unregistering device", e)
             false
         }
     }

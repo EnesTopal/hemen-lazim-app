@@ -18,3 +18,7 @@ data class DeviceRegisterRequestDTO(
     val deviceName: String? = null
 )
 
+data class DeviceUnregisterRequestDTO(
+    val fcmToken: String
+)
+

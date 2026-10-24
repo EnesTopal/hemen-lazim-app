@@ -56,9 +56,12 @@ object ChatUnreadStore {
     /** Uygulama öne geldiğinde ve sohbet listesi açıldığında çağrılır. */
     fun refresh() {
         if (SharedPreferencesProvider.getAccessToken().isNullOrBlank()) return
+        val requestedFor = SharedPreferencesProvider.getUserId()
         scope.launch {
             try {
-                _unreadByRoom.value = api.getUnreadCounts()
+                val counts = api.getUnreadCounts()
+                // Yanıt gelene kadar çıkış yapılmış olabilir: önceki hesabın sayıları geri yazılmasın
+                if (SharedPreferencesProvider.getUserId() == requestedFor) _unreadByRoom.value = counts
             } catch (e: Exception) {
                 Log.e(TAG, "Okunmamış sayıları alınamadı", e)
             }
@@ -81,5 +84,11 @@ object ChatUnreadStore {
                 Log.e(TAG, "Oda okundu işaretlenemedi: $roomId", e)
             }
         }
+    }
+
+    /** Çıkışta, oturum silindikten sonra çağrılır: aynı cihazda giren sonraki hesap öncekinin rozetlerini görmesin. */
+    fun clear() {
+        activeRoomId = null
+        _unreadByRoom.value = emptyMap()
     }
 }

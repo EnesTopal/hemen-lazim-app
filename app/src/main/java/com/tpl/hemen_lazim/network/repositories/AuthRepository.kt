@@ -5,6 +5,7 @@ import android.util.Log
 import com.tpl.hemen_lazim.model.DTOs.*
 import com.tpl.hemen_lazim.network.services.AuthService
 import com.tpl.hemen_lazim.network.RetrofitClient
+import com.tpl.hemen_lazim.network.WebSocketManager
 import com.tpl.hemen_lazim.utils.SharedPreferencesProvider
 import com.tpl.hemen_lazim.firebase.FirebaseTokenManager
 import org.json.JSONObject
@@ -94,18 +95,31 @@ class AuthRepository(
 
 
     suspend fun logout(): Result<Unit> {
-        val refresh = SharedPreferencesProvider.getRefreshToken()
-            ?: return Result.success(Unit).also { SharedPreferencesProvider.clearSession() }
+        // Ağdan bağımsız ve anında: canlı mesajlar bu hesaptan kopsun
+        WebSocketManager.disconnect()
 
-        return try {
-            val res = api.logout(RefreshRequest(refresh))
-            // Başarılı ya da değil — local session'ı temizle
-            SharedPreferencesProvider.clearSession()
-            if (res.isSuccessful) Result.success(Unit)
-            else Result.failure(IllegalStateException(extractApiMessage(res.errorBody()?.string())))
-        } catch (_: Exception) {
-            SharedPreferencesProvider.clearSession()
-            Result.success(Unit)
+        try {
+            // Access token henüz silinmeden (uç nokta kimlik istiyor): bu cihaz artık bu
+            // hesabın bildirimlerini almasın. Girişte initializeFcmToken'ın karşılığı.
+            FirebaseTokenManager.unregisterFromServer()
+
+            val refresh = SharedPreferencesProvider.getRefreshToken()
+                ?: return Result.success(Unit).also { SharedPreferencesProvider.clearSession() }
+
+            return try {
+                val res = api.logout(RefreshRequest(refresh))
+                // Başarılı ya da değil — local session'ı temizle
+                SharedPreferencesProvider.clearSession()
+                if (res.isSuccessful) Result.success(Unit)
+                else Result.failure(IllegalStateException(extractApiMessage(res.errorBody()?.string())))
+            } catch (_: Exception) {
+                SharedPreferencesProvider.clearSession()
+                Result.success(Unit)
+            }
+        } finally {
+            // Oturum silindikten sonra (zaman aşımında da): çıkış sürerken gelen bir rozet
+            // yenilemesi bu hesabın sayılarını geri yazmış olabilir
+            ChatUnreadStore.clear()
         }
     }
 

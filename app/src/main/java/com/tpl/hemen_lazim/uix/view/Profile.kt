@@ -13,14 +13,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.tpl.hemen_lazim.network.repositories.AuthRepository
 import com.tpl.hemen_lazim.uix.innerview.ScreenScaffold
 import com.tpl.hemen_lazim.utils.SharedPreferencesProvider
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Profile(navController: NavController) {
     val context = LocalContext.current
     val userName = remember { SharedPreferencesProvider.getPreferredUsername() ?: "Kullanıcı" }
+    val authRepo = remember { AuthRepository() }
+    val scope = rememberCoroutineScope()
+    var isLoggingOut by remember { mutableStateOf(false) }
 
     ScreenScaffold(navController, currentRoute = "Profile",
         topBar = { CenterAlignedTopAppBar(title = { Text("Profil") }) }
@@ -60,16 +66,22 @@ fun Profile(navController: NavController) {
 
             ElevatedCard(Modifier
                 .fillMaxWidth()
-                .clickable {
-                    SharedPreferencesProvider.clearSession() // erişim/yenileme tokenlarını sil
-                    Toast.makeText(context, "Çıkış yapıldı", Toast.LENGTH_SHORT).show()
-                    navController.navigate("Auth") {
-                        popUpTo(navController.graph.startDestinationId) { inclusive = true }
-                        launchSingleTop = true
+                .clickable(enabled = !isLoggingOut) {
+                    isLoggingOut = true
+                    scope.launch {
+                        // Sunucu çağrıları (cihaz kaydı, refresh token iptali) en fazla birkaç
+                        // saniye beklenir; ağ yoksa da çıkış tamamlanır.
+                        withTimeoutOrNull(LOGOUT_TIMEOUT_MS) { authRepo.logout() }
+                        SharedPreferencesProvider.clearSession() // zaman aşımında da token kalmasın
+                        Toast.makeText(context, "Çıkış yapıldı", Toast.LENGTH_SHORT).show()
+                        navController.navigate("Auth") {
+                            popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                            launchSingleTop = true
+                        }
                     }
                 }) {
                 ListItem(
-                    headlineContent = { Text("Çıkış Yap") },
+                    headlineContent = { Text(if (isLoggingOut) "Çıkış yapılıyor..." else "Çıkış Yap") },
                     supportingContent = { Text("Hesabından güvenle çık") },
                     leadingContent = { Icon(Icons.Default.Logout, contentDescription = null) }
                 )
@@ -77,3 +89,5 @@ fun Profile(navController: NavController) {
         }
     }
 }
+
+private const val LOGOUT_TIMEOUT_MS = 5000L
