@@ -41,7 +41,7 @@ class MaterialRequestCreateViewModel(
         }
     }
     fun onRadiusKm(v: Float) = _ui.update { it.copy(radiusKm = v) }
-    fun onExpires(v: String) = _ui.update { it.copy(expiresAt = v, expiresError = null) }
+    fun onDuration(minutes: Int) = _ui.update { it.copy(durationMinutes = minutes) }
     fun clearToast() = _ui.update { it.copy(toastMessage = null) }
 
     private fun validate(): Boolean {
@@ -72,7 +72,6 @@ class MaterialRequestCreateViewModel(
             _ui.update { it.copy(lonError = "Geçerli boylam girin") }; ok = false
         }
 
-        // expiresAt opsiyonel; formatı şimdilik serbest bırakıyoruz
         return ok
     }
 
@@ -91,7 +90,7 @@ class MaterialRequestCreateViewModel(
             latitude = s.latitude.toDouble(),
             longitude = s.longitude.toDouble(),
             radiusMeters = (s.radiusKm * 1000).roundToInt(),
-            expiresInHours = s.expiresAt.ifBlank { null }
+            expiresInMinutes = s.durationMinutes
         )
 
         Log.d("MaterialRequestCreateViewModel", "Sending request: $body")

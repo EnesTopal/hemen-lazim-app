@@ -9,4 +9,8 @@ object RequestLimits {
     const val MAX_RADIUS_KM = 10f
     const val DEFAULT_REQUEST_RADIUS_KM = 1.5f
     const val DEFAULT_SEARCH_RADIUS_KM = 0.5f
+
+    const val MIN_DURATION_MIN = 15
+    const val MAX_DURATION_MIN = 24 * 60
+    const val DEFAULT_DURATION_MIN = 60
 }

@@ -110,12 +110,10 @@ fun CreateForm(ui: MaterialFormState, vm: MaterialRequestCreateViewModel) {
     )
     Spacer(Modifier.height(10.dp))
 
-    OutlinedTextField(
-        value = ui.expiresAt,
-        onValueChange = vm::onExpires,
-        label = { Text("Bitiş (ISO8601)") },
-        singleLine = true,
-        modifier = Modifier.fillMaxWidth()
+    // Eskiden "Bitiş (ISO8601)" serbest metniydi, sunucu ise saat sayısı bekliyordu
+    DurationPicker(
+        minutes = ui.durationMinutes,
+        onMinutesChange = vm::onDuration
     )
 }
 

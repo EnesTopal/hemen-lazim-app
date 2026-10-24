@@ -18,6 +18,7 @@ import com.tpl.hemen_lazim.model.DTOs.MaterialRequestDTO
 import com.tpl.hemen_lazim.model.enums.toDisplayName
 import com.tpl.hemen_lazim.model.enums.toEmoji
 import com.tpl.hemen_lazim.utils.formatDistance
+import com.tpl.hemen_lazim.utils.formatRemaining
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -136,10 +137,10 @@ fun RequestDetailDialog(
                         value = formatInstant(request.createdAt)
                     )
                     
-                    if (request.expiresAt != null) {
+                    request.expiresAt?.let(::formatRemaining)?.let { remaining ->
                         DetailRow(
-                            label = "Bitiş",
-                            value = formatInstant(request.expiresAt)
+                            label = "Kalan süre",
+                            value = remaining
                         )
                     }
                 }
