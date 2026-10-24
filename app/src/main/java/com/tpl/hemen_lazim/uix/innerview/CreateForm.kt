@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.google.android.gms.maps.model.LatLng
 import com.tpl.hemen_lazim.model.MaterialFormState
 import com.tpl.hemen_lazim.model.enums.Category
 import com.tpl.hemen_lazim.model.enums.Units
@@ -22,7 +23,11 @@ import com.tpl.hemen_lazim.uix.viewmodel.MaterialRequestCreateViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CreateForm(ui: MaterialFormState, vm: MaterialRequestCreateViewModel) {
+fun CreateForm(
+    ui: MaterialFormState,
+    vm: MaterialRequestCreateViewModel,
+    onMapTouchChange: (Boolean) -> Unit
+) {
 
     OutlinedTextField(
         value = ui.title,
@@ -91,12 +96,16 @@ fun CreateForm(ui: MaterialFormState, vm: MaterialRequestCreateViewModel) {
     Spacer(Modifier.height(10.dp))
 
     // Location Map Component
+    val selected = ui.latitude.toDoubleOrNull()?.let { lat ->
+        ui.longitude.toDoubleOrNull()?.let { lng -> LatLng(lat, lng) }
+    }
     LocationMapComponent(
-        currentLatitude = ui.latitude.toDoubleOrNull(),
-        currentLongitude = ui.longitude.toDoubleOrNull(),
+        selected = selected,
+        radiusKm = ui.radiusKm,
         onLocationSelected = { latitude, longitude ->
             vm.updateLocation(latitude, longitude)
         },
+        onMapTouchChange = onMapTouchChange,
         modifier = Modifier.fillMaxWidth()
     )
     Spacer(Modifier.height(10.dp))

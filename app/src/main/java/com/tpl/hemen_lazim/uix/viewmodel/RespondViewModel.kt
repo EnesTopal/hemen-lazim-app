@@ -23,6 +23,8 @@ data class RespondUiState(
         val isLoading: Boolean = false,
         val toastMessage: String? = null,
         val selectedRequest: MaterialRequestDTO? = null,
+        // Son dokunulan talep: detay kapandıktan sonra da dairesi haritada kalır
+        val highlightedRequest: MaterialRequestDTO? = null,
         val isSendingNotification: Boolean = false
 )
 
@@ -46,7 +48,9 @@ class RespondViewModel(
     }
 
     fun selectRequest(request: MaterialRequestDTO?) {
-        _ui.update { it.copy(selectedRequest = request) }
+        _ui.update {
+            it.copy(selectedRequest = request, highlightedRequest = request ?: it.highlightedRequest)
+        }
     }
 
     fun clearToast() {
@@ -81,9 +85,15 @@ class RespondViewModel(
                     ensureActive()
 
                     if (result.isSuccess) {
+                        val requests = result.getOrNull() ?: emptyList()
                         _ui.update {
                             it.copy(
-                                    nearbyRequests = result.getOrNull() ?: emptyList(),
+                                    nearbyRequests = requests,
+                                    // Artık listede olmayan (süresi dolan) talebin dairesi kalmasın
+                                    highlightedRequest =
+                                            it.highlightedRequest?.takeIf { highlighted ->
+                                                requests.any { r -> r.id == highlighted.id }
+                                            },
                                     isLoading = false
                             )
                         }

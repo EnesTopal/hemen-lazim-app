@@ -39,6 +39,8 @@ fun MaterialRequest(navController: NavController) {
     ) { padding ->
         val context = LocalContext.current
         val scrollState = rememberScrollState()
+        // Kart içindeki haritaya dokunulduğu sürece sayfa kaymasın: dikey sürükleme haritaya gitsin
+        var mapTouched by remember { mutableStateOf(false) }
 
         val api = remember { RetrofitClient.retrofit.create(RequestService::class.java) }
         val repo = remember { RequestRepository(api) }
@@ -63,7 +65,7 @@ fun MaterialRequest(navController: NavController) {
             }
         }
 
-        Column(Modifier.fillMaxSize().padding(padding).verticalScroll(scrollState).padding(16.dp)) {
+        Column(Modifier.fillMaxSize().padding(padding).verticalScroll(scrollState, enabled = !mapTouched).padding(16.dp)) {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 SegButton(
                         text = "İstek Oluştur",
@@ -81,7 +83,7 @@ fun MaterialRequest(navController: NavController) {
 
             when (selectedTab) {
                 "create" -> {
-                    CreateForm(ui = ui, vm = vm)
+                    CreateForm(ui = ui, vm = vm, onMapTouchChange = { mapTouched = it })
 
                     Spacer(Modifier.height(12.dp))
                     Button(
@@ -101,23 +103,16 @@ fun MaterialRequest(navController: NavController) {
                             modifier = Modifier.fillMaxWidth(),
                             verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        // Map with nearby requests
+                        // İlan açma ekranıyla aynı harita kartı
                         RespondMapView(
-                                userLocation =
-                                        if (respondUi.userLatitude != null &&
-                                                        respondUi.userLongitude != null
-                                        )
-                                                LatLng(
-                                                        respondUi.userLatitude!!,
-                                                        respondUi.userLongitude!!
-                                                )
-                                        else null,
                                 radiusKm = respondUi.radiusKm,
                                 nearbyRequests = respondUi.nearbyRequests,
+                                highlightedRequest = respondUi.highlightedRequest,
                                 onLocationReceived = { latLng ->
                                     respondVm.setUserLocation(latLng.latitude, latLng.longitude)
                                 },
-                                onRequestClick = { request -> respondVm.selectRequest(request) }
+                                onRequestClick = { request -> respondVm.selectRequest(request) },
+                                onMapTouchChange = { mapTouched = it }
                         )
 
                         // İlan açma ekranındakiyle aynı kaydırıcı
@@ -128,8 +123,8 @@ fun MaterialRequest(navController: NavController) {
                                 onRadiusChangeFinished = { respondVm.fetchNearbyRequests() }
                         )
 
-                        // Requests count info
-                        if (respondUi.nearbyRequests.isNotEmpty()) {
+                        // Sayaç konum bilinir bilinmez hep görünür; boş sonuç da bir sonuçtur
+                        if (respondUi.userLatitude != null) {
                             Card(
                                     modifier = Modifier.fillMaxWidth(),
                                     colors =
@@ -140,7 +135,13 @@ fun MaterialRequest(navController: NavController) {
                                             )
                             ) {
                                 Text(
-                                        text = "${respondUi.nearbyRequests.size} talep bulundu",
+                                        text =
+                                                when {
+                                                    respondUi.isLoading -> "Talepler aranıyor…"
+                                                    respondUi.nearbyRequests.isEmpty() ->
+                                                            "Bu alanda talep yok. Alanı büyütmeyi dene."
+                                                    else -> "${respondUi.nearbyRequests.size} talep bulundu"
+                                                },
                                         style = MaterialTheme.typography.bodyMedium,
                                         modifier = Modifier.padding(12.dp),
                                         color = MaterialTheme.colorScheme.onPrimaryContainer
