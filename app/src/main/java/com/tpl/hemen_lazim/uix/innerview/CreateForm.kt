@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import com.tpl.hemen_lazim.model.MaterialFormState
 import com.tpl.hemen_lazim.model.enums.Category
 import com.tpl.hemen_lazim.model.enums.Units
+import com.tpl.hemen_lazim.model.enums.toDisplayName
 import com.tpl.hemen_lazim.uix.viewmodel.MaterialRequestCreateViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -55,7 +56,8 @@ fun CreateForm(ui: MaterialFormState, vm: MaterialRequestCreateViewModel) {
         values = Category.entries.toTypedArray(),
         selected = ui.category,
         onSelect = { vm.onCategory(it) },
-        error = ui.categoryError
+        error = ui.categoryError,
+        itemLabel = { it.toDisplayName() }
     )
     Spacer(Modifier.height(10.dp))
 
@@ -83,7 +85,8 @@ fun CreateForm(ui: MaterialFormState, vm: MaterialRequestCreateViewModel) {
         values = Units.entries.toTypedArray(),
         selected = ui.units,
         onSelect = { vm.onUnit(it) },
-        error = ui.unitError
+        error = ui.unitError,
+        itemLabel = { it.toDisplayName() }
     )
     Spacer(Modifier.height(10.dp))
 

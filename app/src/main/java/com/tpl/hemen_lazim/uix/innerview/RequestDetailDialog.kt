@@ -107,7 +107,7 @@ fun RequestDetailDialog(
                     if (request.quantity != null && request.units != null) {
                         DetailRow(
                             label = "Miktar",
-                            value = "${request.quantity} ${request.units.name}"
+                            value = "${request.quantity} ${request.units.toDisplayName()}"
                         )
                     }
                     

@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.tpl.hemen_lazim.model.DTOs.MaterialRequestDTO
+import com.tpl.hemen_lazim.model.enums.toDisplayName
 import com.tpl.hemen_lazim.model.enums.toEmoji
 
 /**
@@ -137,7 +138,7 @@ private fun RequestListItem(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = request.category.name,
+                    text = request.category.toDisplayName(),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -149,7 +150,7 @@ private fun RequestListItem(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = "$quantity ${request.units?.name ?: ""}",
+                        text = "$quantity ${request.units?.toDisplayName() ?: ""}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

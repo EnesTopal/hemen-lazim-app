@@ -38,6 +38,7 @@ import com.google.maps.android.clustering.ClusterManager
 import com.google.maps.android.clustering.view.DefaultClusterRenderer
 import com.google.maps.android.compose.*
 import com.tpl.hemen_lazim.model.DTOs.MaterialRequestDTO
+import com.tpl.hemen_lazim.model.enums.toDisplayName
 import com.tpl.hemen_lazim.model.enums.toEmoji
 
 @SuppressLint("MissingPermission")
@@ -469,7 +470,7 @@ private class RequestClusterRenderer(
         markerOptions
             .icon(icon)
             .title(item.request.title)
-            .snippet("${item.request.category.name} - Detayları görmek için tıklayın")
+            .snippet("${item.request.category.toDisplayName()} - Detayları görmek için tıklayın")
     }
     
     override fun shouldRenderAsCluster(cluster: com.google.maps.android.clustering.Cluster<RequestClusterItem>): Boolean {
