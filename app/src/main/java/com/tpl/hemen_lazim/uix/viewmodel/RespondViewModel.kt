@@ -116,8 +116,10 @@ class RespondViewModel(
                 val result = notificationRepo.sendSupplyOfferNotification(requestId, requesterId)
 
                 if (result.isSuccess) {
+                    // Sunucunun mesajı: "haber verildi" ya da aynı talebe tekrar basınca
+                    // "zaten haber verildi" (ikinci bir bildirim gitmez)
                     _ui.update {
-                        it.copy(isSendingNotification = false, toastMessage = "Bildirim gönderildi")
+                        it.copy(isSendingNotification = false, toastMessage = result.getOrNull())
                     }
                     onSuccess()
                 } else {

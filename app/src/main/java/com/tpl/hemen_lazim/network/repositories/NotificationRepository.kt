@@ -19,7 +19,7 @@ class NotificationRepository(
             val res = api.sendSupplyOfferNotification(dto)
             
             if (res.isSuccessful) {
-                val message = res.body()?.message ?: "Notification sent"
+                val message = res.body()?.message ?: "Talep sahibine haber verildi"
                 Log.d(TAG, "Notification sent successfully")
                 Result.success(message)
             } else {

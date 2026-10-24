@@ -15,6 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -27,6 +28,10 @@ import com.tpl.hemen_lazim.model.uiKey
 import kotlinx.coroutines.delay
 
 private const val SYNC_INTERVAL_MS = 3000L
+
+// Sunucudaki messages.content sütunu (ChatService.MAX_CONTENT_LENGTH); daha uzunu reddediliyor
+private const val MAX_MESSAGE_LENGTH = 255
+private const val COUNTER_VISIBLE_FROM = MAX_MESSAGE_LENGTH - 30
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -140,9 +145,23 @@ fun ChatScreen(
         ) {
             TextField(
                     value = inputText,
-                    onValueChange = { inputText = it },
+                    onValueChange = { if (it.length <= MAX_MESSAGE_LENGTH) inputText = it },
                     modifier = Modifier.weight(1f),
                     placeholder = { Text("Mesaj yazın...") },
+                    supportingText =
+                            if (inputText.length >= COUNTER_VISIBLE_FROM) {
+                                {
+                                    Text(
+                                            text = "${inputText.length}/$MAX_MESSAGE_LENGTH",
+                                            modifier = Modifier.fillMaxWidth(),
+                                            textAlign = TextAlign.End,
+                                            color =
+                                                    if (inputText.length == MAX_MESSAGE_LENGTH)
+                                                            MaterialTheme.colorScheme.error
+                                                    else Color.Gray
+                                    )
+                                }
+                            } else null,
                     colors =
                             TextFieldDefaults.colors(
                                     focusedContainerColor = Color.Transparent,
