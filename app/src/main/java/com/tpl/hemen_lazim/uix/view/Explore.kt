@@ -48,7 +48,7 @@ import com.tpl.hemen_lazim.ui.theme.Spacing
 import com.tpl.hemen_lazim.uix.innerview.CreateRequestFab
 import com.tpl.hemen_lazim.uix.innerview.NearbyRequestCard
 import com.tpl.hemen_lazim.uix.innerview.RadiusSlider
-import com.tpl.hemen_lazim.uix.innerview.RequestDetailDialog
+import com.tpl.hemen_lazim.uix.innerview.RequestDetailSheet
 import com.tpl.hemen_lazim.uix.innerview.RespondMapView
 import com.tpl.hemen_lazim.uix.viewmodel.RespondUiState
 import com.tpl.hemen_lazim.uix.viewmodel.RespondViewModel
@@ -132,14 +132,15 @@ fun Explore(
         }
 
         ui.selectedRequest?.let { request ->
-            RequestDetailDialog(
+            RequestDetailSheet(
                 request = request,
+                isSending = ui.isSendingNotification,
                 onDismiss = { vm.selectRequest(null) },
                 onSupply = {
                     val requesterId = request.requesterId
                     if (requesterId == null) {
                         snackbar.show(missingRequester)
-                        return@RequestDetailDialog
+                        return@RequestDetailSheet
                     }
                     vm.sendSupplyOfferNotification(
                         requestId = request.id,

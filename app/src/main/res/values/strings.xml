@@ -35,6 +35,17 @@
     <string name="time_left">%1$s kaldı</string>
     <string name="distance_away">%1$s uzakta</string>
 
+    <!-- Talep detayı -->
+    <string name="request_supply">Bende var, verebilirim</string>
+    <string name="request_supply_hint">Talep sahibine haber verilir ve sohbet açılır.</string>
+    <string name="request_requester">Talep eden: %1$s</string>
+    <string name="request_requester_unknown">bilinmiyor</string>
+    <plurals name="same_spot_title">
+        <item quantity="one">Bu noktada %d talep</item>
+        <item quantity="other">Bu noktada %d talep</item>
+    </plurals>
+    <string name="same_spot_hint">Ayrıntı için birine dokun.</string>
+
     <!-- Talep açma -->
     <string name="create_request">Talep aç</string>
     <string name="create_request_title">Yeni talep</string>

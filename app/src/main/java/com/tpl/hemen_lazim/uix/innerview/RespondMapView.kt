@@ -96,9 +96,12 @@ fun RespondMapView(
     }
 
     if (sameSpotRequests.isNotEmpty()) {
-        MultiRequestDialog(
+        SameSpotRequestsSheet(
             requests = sameSpotRequests,
-            onRequestSelected = onRequestClick,
+            onSelect = { request ->
+                sameSpotRequests = emptyList()
+                onRequestClick(request)
+            },
             onDismiss = { sameSpotRequests = emptyList() }
         )
     }
