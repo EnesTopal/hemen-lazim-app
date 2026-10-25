@@ -28,6 +28,9 @@ Bu not, bu daldaki işi yerelde derleyip cihazda deneyecek kişi ya da Claude i�
 
 ## Adımlar
 1. **Dalı al:** `git fetch origin` ve `git checkout refactor-project`.
+   - Bu dalın eski adı `claude/great-thompson-j0w9ae`. GitHub'da hâlâ duruyorsa sil; içeriği bu dalda.
+   - Önce doğrula: `git merge-base --is-ancestor origin/claude/great-thompson-j0w9ae origin/refactor-project` hatasız dönmeli.
+   - Sonra sil: `git push origin --delete claude/great-thompson-j0w9ae`.
 2. **Derle ve test et:** `./gradlew :app:assembleDebug :app:testDebugUnitTest` (Windows: `gradlew.bat`). 20 birim testi geçmeli.
    - **Dikkat:** bulut ortamında jitpack'e erişilemediği için bu dal STOMP kütüphanesi olmadan derlendi; `WebSocketManager.kt`'nin yerine bir taslak kullanıldı.
    - Gerçek `WebSocketManager.kt` ilk kez burada derlenecek. Dosyadaki tek değişiklik `connectedUserId`: hesap değişince soket yeniden kuruluyor.
