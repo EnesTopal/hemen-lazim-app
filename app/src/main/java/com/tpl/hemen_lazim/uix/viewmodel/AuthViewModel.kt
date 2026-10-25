@@ -25,13 +25,19 @@ class AuthViewModel(
             isLogin = !it.isLogin,
             toastMessage = null,
             formError = null,
+            usernameError = null,
             emailError = null,
             passwordError = null
         )
     }
 
-    fun onUsernameChange(v: String) = _ui.update { it.copy(username = v, toastMessage = null) }
-    fun onEmailChange(v: String) = _ui.update { it.copy(email = v, toastMessage = null) }
+    /** Segmentli düğmeden: zaten seçili moda basmak formu sıfırlamasın. */
+    fun setMode(isLogin: Boolean) {
+        if (_ui.value.isLogin != isLogin) toggleMode()
+    }
+
+    fun onUsernameChange(v: String) = _ui.update { it.copy(username = v, usernameError = null, toastMessage = null) }
+    fun onEmailChange(v: String) = _ui.update { it.copy(email = v, emailError = null, toastMessage = null) }
     fun onPasswordChange(v: String) = _ui.update {
         val err = if (it.isLogin) null else AuthValidator.validatePassword(v)
         it.copy(password = v, passwordError = err, toastMessage = null, formError = null)
@@ -100,14 +106,17 @@ class AuthViewModel(
                     }
                     onRegisterSwitchedToLogin()
                 } else {
+                    // Sunucu İngilizce konuşuyor; bilinen iki çakışma ilgili alanın altında Türkçe
+                    // gösterilir, geri kalan mesajlar olduğu gibi
                     val msg = res.exceptionOrNull()?.message ?: "Hata"
+                    val usernameTaken = msg.contains("Username already in use", ignoreCase = true)
                     val emailTaken = msg.contains("Email already in use", ignoreCase = true)
                     _ui.update {
                         it.copy(
                             isLoading = false,
-                            formError = if (emailTaken) "Bu e-posta zaten kayıtlı" else null,
+                            usernameError = if (usernameTaken) "Bu kullanıcı adı alınmış" else it.usernameError,
                             emailError = if (emailTaken) "Bu e-posta zaten kayıtlı" else it.emailError,
-                            toastMessage = if (emailTaken) null else msg
+                            toastMessage = if (usernameTaken || emailTaken) null else msg
                         )
                     }
                 }

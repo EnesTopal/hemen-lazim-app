@@ -1,187 +1,148 @@
 package com.tpl.hemen_lazim.uix.innerview
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.launch
+import com.tpl.hemen_lazim.R
+import com.tpl.hemen_lazim.model.AuthUiState
+import com.tpl.hemen_lazim.ui.theme.Spacing
 
+/**
+ * Giriş / kayıt formu: üstte mod seçimi, alanlar ve gönder. Hatalar ilgili alanın altında;
+ * şifre kuralı kayıt modunda baştan görünür (AuthValidator ile aynı kural).
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AuthBlock(
-    isLogin: Boolean,
-    username: String,
-    password: String,
-    email: String,
-    isLoading: Boolean,
-    // yeni parametreler:
-    emailError: String?,
-    passwordError: String?,
-    formError: String?,
-    canSubmit: Boolean,
-    onToggleMode: () -> Unit,
+    ui: AuthUiState,
+    onModeChange: (isLogin: Boolean) -> Unit,
     onUsernameChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
     onEmailChange: (String) -> Unit,
-    onSubmit: () -> Unit
+    onSubmit: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
+    val focusManager = LocalFocusManager.current
+    var passwordVisible by remember { mutableStateOf(false) }
+    val enabled = !ui.isLoading
+
     Column(
-        modifier = Modifier
-            .widthIn(max = 360.dp)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        modifier = modifier.widthIn(max = 420.dp),
+        verticalArrangement = Arrangement.spacedBy(Spacing.m)
     ) {
-        // Üst toggle (stil aynı, sadece no-op aktif)
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            if (isLogin) {
-                Button(onClick = {}, enabled = !isLoading) { Text("Login") }
-                OutlinedButton(onClick = { if (!isLoading) onToggleMode() }, enabled = !isLoading) { Text("Register") }
-            } else {
-                OutlinedButton(onClick = { if (!isLoading) onToggleMode() }, enabled = !isLoading) { Text("Login") }
-                Button(onClick = {}, enabled = !isLoading) { Text("Register") }
-            }
+        SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+            SegmentedButton(
+                selected = ui.isLogin,
+                onClick = { onModeChange(true) },
+                enabled = enabled,
+                shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
+            ) { Text(stringResource(R.string.auth_login)) }
+            SegmentedButton(
+                selected = !ui.isLogin,
+                onClick = { onModeChange(false) },
+                enabled = enabled,
+                shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
+            ) { Text(stringResource(R.string.auth_register)) }
         }
 
-        // Username (görsel hata istemiyorsun diye sabit bıraktım)
         OutlinedTextField(
-            value = username,
+            value = ui.username,
             onValueChange = onUsernameChange,
-            label = { Text("Username") },
+            label = { Text(stringResource(R.string.auth_username)) },
             singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+            enabled = enabled,
+            isError = ui.usernameError != null,
+            supportingText = ui.usernameError?.let { error -> { Text(error) } },
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+            keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
+            modifier = Modifier.fillMaxWidth()
         )
 
-        if (!isLogin) {
+        if (!ui.isLogin) {
             OutlinedTextField(
-                value = email,
+                value = ui.email,
                 onValueChange = onEmailChange,
-                label = { Text("Email") },
+                label = { Text(stringResource(R.string.auth_email)) },
                 singleLine = true,
-                isError = emailError != null, // sadece stil
-                trailingIcon = {
-                    if (emailError != null) {
-                        Icon(
-                            imageVector = Icons.Default.Error,
-                            contentDescription = "Hata",
-                            tint = MaterialTheme.colorScheme.error
-                        )
-                    }
-                },
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+                enabled = enabled,
+                isError = ui.emailError != null,
+                supportingText = ui.emailError?.let { error -> { Text(error) } },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
+                modifier = Modifier.fillMaxWidth()
             )
         }
 
-        // Password: görsel hata + visibility toggle (metin yok, layout kaymaz)
-        var visible by remember { mutableStateOf(false) }
-
         OutlinedTextField(
-            value = password,
+            value = ui.password,
             onValueChange = onPasswordChange,
-            label = { Text("Password") },
+            label = { Text(stringResource(R.string.auth_password)) },
             singleLine = true,
-            isError = passwordError != null,
-            visualTransformation = if (visible) VisualTransformation.None else PasswordVisualTransformation(),
+            enabled = enabled,
+            isError = ui.passwordError != null,
+            supportingText = when {
+                ui.passwordError != null -> {
+                    { Text(ui.passwordError) }
+                }
+                // Kuralı hata almadan önce göster: eski ipucu özel karakter istiyordu, kural istemiyor
+                !ui.isLogin -> {
+                    { Text(stringResource(R.string.auth_password_rule)) }
+                }
+                else -> null
+            },
+            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             trailingIcon = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (passwordError != null) {
-                        val tooltipState = rememberTooltipState(isPersistent = false)
-                        val scope = rememberCoroutineScope()
-
-                        TooltipBox(
-                            positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
-                            state = tooltipState,
-                            tooltip = {
-                                PlainTooltip {
-                                    Column {
-                                        Text("Şifre gereksinimleri:", style = MaterialTheme.typography.labelLarge)
-                                        Spacer(Modifier.height(4.dp))
-                                        Text("• En az 8 karakter")
-                                        Text("• En az 1 sayı + 1 özel karakter")
-                                    }
-                                }
-                            }
-                        ) {
-                            IconButton(
-                                onClick = {
-                                    scope.launch {
-                                        if (tooltipState.isVisible) tooltipState.dismiss() else tooltipState.show()
-                                    }
-                                }
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Error,
-                                    contentDescription = "Şifre kuralları",
-                                    tint = MaterialTheme.colorScheme.error
-                                )
-                            }
-                        }
-
-                        Spacer(Modifier.width(8.dp))
-                    }
-
-                    IconButton(onClick = { visible = !visible }) {
-                        Icon(
-                            imageVector = if (visible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                            contentDescription = if (visible) "Gizle" else "Göster"
+                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                    Icon(
+                        imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                        contentDescription = stringResource(
+                            if (passwordVisible) R.string.auth_hide_password else R.string.auth_show_password
                         )
-                    }
+                    )
                 }
             },
-            modifier = Modifier.fillMaxWidth(),
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(onDone = {
+                focusManager.clearFocus()
+                if (ui.canSubmit) onSubmit()
+            }),
+            modifier = Modifier.fillMaxWidth()
         )
 
+        if (!ui.formError.isNullOrBlank()) {
+            Text(
+                text = ui.formError,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.error
+            )
+        }
 
-        Spacer(Modifier.weight(1f)) // alanlar kaymasın
-
-        // Alttaki sabit "hata bandı": tek satır, sabit yükseklik; klavye üstünde kalır
-        FormErrorBar(message = formError)
-
-        // Submit
         Button(
             onClick = onSubmit,
-            enabled = canSubmit && !isLoading,
+            enabled = ui.canSubmit && !ui.isLoading,
             modifier = Modifier
                 .fillMaxWidth()
-                .imePadding() // klavye üstünde
+                .heightIn(min = 52.dp)
         ) {
-            Text(if (isLogin) "Login" else "Register")
+            if (ui.isLoading) {
+                CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
+                Spacer(Modifier.width(Spacing.s))
+            }
+            Text(stringResource(if (ui.isLogin) R.string.auth_login else R.string.auth_register))
         }
-    }
-}
-
-/** Sabit yükseklikli, tek satırlık hata çubuğu — boşken alpha=0 ile görünmez. */
-@Composable
-fun FormErrorBar(message: String?) {
-    val hasError = !message.isNullOrBlank()
-    val alpha = if (hasError) 1f else 0f
-
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(44.dp)
-            .imePadding()
-            .padding(horizontal = 4.dp),
-        contentAlignment = Alignment.CenterStart
-    ) {
-        Text(
-            text = message ?: "",
-            modifier = Modifier.alpha(alpha),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.error
-        )
     }
 }

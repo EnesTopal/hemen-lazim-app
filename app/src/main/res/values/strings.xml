@@ -58,6 +58,28 @@
     <string name="chat_retry">Tekrar gönder</string>
     <string name="chat_empty">İlk mesajı yaz; ne zaman, nerede buluşacağınızı konuşun.</string>
 
+    <!-- Giriş -->
+    <string name="auth_tagline">Komşundan hemen iste, elindekini hemen ver.</string>
+    <string name="auth_login">Giriş yap</string>
+    <string name="auth_register">Kayıt ol</string>
+    <string name="auth_username">Kullanıcı adı</string>
+    <string name="auth_email">E-posta</string>
+    <string name="auth_password">Şifre</string>
+    <string name="auth_password_rule">En az 8 karakter, harf ve rakam</string>
+    <string name="auth_show_password">Şifreyi göster</string>
+    <string name="auth_hide_password">Şifreyi gizle</string>
+
+    <!-- Profil -->
+    <string name="profile_notifications">Bildirim ayarları</string>
+    <string name="profile_notifications_hint">Teklif ve mesaj bildirimleri</string>
+    <string name="profile_my_requests_hint">Açtığın talepler</string>
+    <string name="profile_logout">Çıkış yap</string>
+    <string name="profile_logging_out">Çıkış yapılıyor…</string>
+    <string name="profile_logout_confirm_title">Çıkış yapılsın mı?</string>
+    <string name="profile_logout_confirm_body">Bu cihaz çıkıştan sonra bu hesabın bildirimlerini almaz.</string>
+    <string name="profile_version">Sürüm %1$s</string>
+    <string name="cancel">Vazgeç</string>
+
     <!-- Talep açma -->
     <string name="create_request">Talep aç</string>
     <string name="create_request_title">Yeni talep</string>

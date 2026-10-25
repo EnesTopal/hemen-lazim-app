@@ -124,7 +124,6 @@ fun AppNavHost(
                     composable(Routes.PROFILE) {
                         Profile(
                             onOpenMyRequests = { navController.navigateToTab(Routes.MY_REQUESTS) },
-                            onOpenChats = { navController.navigateToTab(Routes.CHATS) },
                             onLoggedOut = { navController.navigateToAuth() }
                         )
                     }
