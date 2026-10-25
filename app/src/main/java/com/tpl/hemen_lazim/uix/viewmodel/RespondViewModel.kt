@@ -21,6 +21,10 @@ data class RespondUiState(
         val userLongitude: Double? = null,
         val nearbyRequests: List<MaterialRequestDTO> = emptyList(),
         val isLoading: Boolean = false,
+        // En az bir arama tamamlandı mı: "henüz aranmadı" ile "bu alanda talep yok" ayrışsın
+        val hasLoaded: Boolean = false,
+        // Son arama başarısızsa nedeni; eski liste ekranda kalır
+        val loadError: String? = null,
         val toastMessage: String? = null,
         val selectedRequest: MaterialRequestDTO? = null,
         // Son dokunulan talep: detay kapandıktan sonra da dairesi haritada kalır
@@ -47,6 +51,12 @@ class RespondViewModel(
         _ui.update { it.copy(radiusKm = radiusKm) }
     }
 
+    /** Boş sonuçta "Alanı genişlet": yarıçapı ikiye katlar (üst sınıra kadar) ve yeniden arar. */
+    fun expandRadius() {
+        _ui.update { it.copy(radiusKm = (it.radiusKm * 2).coerceAtMost(RequestLimits.MAX_RADIUS_KM)) }
+        fetchNearbyRequests()
+    }
+
     fun selectRequest(request: MaterialRequestDTO?) {
         _ui.update {
             it.copy(selectedRequest = request, highlightedRequest = request ?: it.highlightedRequest)
@@ -70,7 +80,7 @@ class RespondViewModel(
                         return@launch
                     }
 
-                    _ui.update { it.copy(isLoading = true) }
+                    _ui.update { it.copy(isLoading = true, loadError = null) }
 
                     val radiusMeters = (state.radiusKm * 1000).roundToInt()
                     val result =
@@ -94,15 +104,17 @@ class RespondViewModel(
                                             it.highlightedRequest?.takeIf { highlighted ->
                                                 requests.any { r -> r.id == highlighted.id }
                                             },
-                                    isLoading = false
+                                    isLoading = false,
+                                    hasLoaded = true
                             )
                         }
                     } else {
+                        // Hata listenin yerinde "Tekrar dene" ile gösterilir, toast değil
                         _ui.update {
                             it.copy(
                                     isLoading = false,
-                                    toastMessage = result.exceptionOrNull()?.message
-                                                    ?: "İstekler yüklenemedi"
+                                    loadError = result.exceptionOrNull()?.message
+                                                    ?: "Talepler yüklenemedi"
                             )
                         }
                     }

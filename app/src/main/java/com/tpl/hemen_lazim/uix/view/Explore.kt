@@ -2,16 +2,27 @@ package com.tpl.hemen_lazim.uix.view
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.outlined.ErrorOutline
+import androidx.compose.material.icons.outlined.SearchOff
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -20,21 +31,33 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tpl.hemen_lazim.R
+import com.tpl.hemen_lazim.model.DTOs.MaterialRequestDTO
+import com.tpl.hemen_lazim.model.RequestLimits
 import com.tpl.hemen_lazim.ui.LocalAppSnackbar
 import com.tpl.hemen_lazim.ui.theme.Spacing
 import com.tpl.hemen_lazim.uix.innerview.CreateRequestFab
+import com.tpl.hemen_lazim.uix.innerview.NearbyRequestCard
 import com.tpl.hemen_lazim.uix.innerview.RadiusSlider
 import com.tpl.hemen_lazim.uix.innerview.RequestDetailDialog
 import com.tpl.hemen_lazim.uix.innerview.RespondMapView
+import com.tpl.hemen_lazim.uix.viewmodel.RespondUiState
 import com.tpl.hemen_lazim.uix.viewmodel.RespondViewModel
 import com.tpl.hemen_lazim.utils.SharedPreferencesProvider
 
-/** Keşfet: çevredeki talepler haritada; buradan teklif verilir ya da yeni talep açılır. */
+/**
+ * Keşfet: çevredeki talepler haritada ve altında yakından uzağa liste. Buradan teklif verilir
+ * ya da yeni talep açılır.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Explore(
@@ -44,6 +67,7 @@ fun Explore(
 ) {
     val ui by vm.ui.collectAsStateWithLifecycle()
     val snackbar = LocalAppSnackbar.current
+    val missingRequester = stringResource(R.string.explore_missing_requester)
     // Kart içindeki haritaya dokunulduğu sürece sayfa kaymasın: dikey sürükleme haritaya gitsin
     var mapTouched by remember { mutableStateOf(false) }
 
@@ -53,9 +77,20 @@ fun Explore(
             vm.clearToast()
         }
     }
+    // Sekmeye dönünce sonuçlar tazelensin (konum biliniyorsa; bilinmiyorsa konum gelince aranır)
+    LaunchedEffect(Unit) { vm.fetchNearbyRequests() }
 
     Scaffold(
-        topBar = { CenterAlignedTopAppBar(title = { Text(stringResource(R.string.tab_explore)) }) },
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = { Text(stringResource(R.string.tab_explore)) },
+                actions = {
+                    IconButton(onClick = vm::fetchNearbyRequests, enabled = ui.userLatitude != null) {
+                        Icon(Icons.Filled.Refresh, contentDescription = stringResource(R.string.refresh))
+                    }
+                }
+            )
+        },
         floatingActionButton = { CreateRequestFab(onClick = onCreateRequest) }
     ) { padding ->
         Column(
@@ -64,7 +99,7 @@ fun Explore(
                 .padding(padding)
                 .verticalScroll(rememberScrollState(), enabled = !mapTouched)
                 .padding(Spacing.screen),
-            verticalArrangement = Arrangement.spacedBy(Spacing.l)
+            verticalArrangement = Arrangement.spacedBy(Spacing.m)
         ) {
             RespondMapView(
                 radiusKm = ui.radiusKm,
@@ -76,30 +111,24 @@ fun Explore(
             )
 
             RadiusSlider(
-                title = "Arama alanı",
+                title = stringResource(R.string.explore_search_area),
                 radiusKm = ui.radiusKm,
                 onRadiusChange = { vm.setRadius(it) },
                 onRadiusChangeFinished = { vm.fetchNearbyRequests() }
             )
 
-            // Sayaç konum bilinir bilinmez hep görünür; boş sonuç da bir sonuçtur
+            // Konum bilinene kadar liste yok; harita kartı izin/konum durumunu zaten gösteriyor
             if (ui.userLatitude != null) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
-                ) {
-                    Text(
-                        text = when {
-                            ui.isLoading -> "Talepler aranıyor…"
-                            ui.nearbyRequests.isEmpty() -> "Bu alanda talep yok. Alanı büyütmeyi dene."
-                            else -> "${ui.nearbyRequests.size} talep bulundu"
-                        },
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(Spacing.m),
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                }
+                Results(
+                    ui = ui,
+                    onRequestClick = vm::selectRequest,
+                    onRetry = vm::fetchNearbyRequests,
+                    onExpand = vm::expandRadius
+                )
             }
+
+            // FAB son kartın üstünü örtmesin
+            Spacer(Modifier.height(FAB_CLEARANCE))
         }
 
         ui.selectedRequest?.let { request ->
@@ -109,7 +138,7 @@ fun Explore(
                 onSupply = {
                     val requesterId = request.requesterId
                     if (requesterId == null) {
-                        snackbar.show("Talep sahibi bilgisi bulunamadı")
+                        snackbar.show(missingRequester)
                         return@RequestDetailDialog
                     }
                     vm.sendSupplyOfferNotification(
@@ -132,3 +161,95 @@ fun Explore(
         }
     }
 }
+
+@Composable
+private fun Results(
+    ui: RespondUiState,
+    onRequestClick: (MaterialRequestDTO) -> Unit,
+    onRetry: () -> Unit,
+    onExpand: () -> Unit
+) {
+    val requests = ui.nearbyRequests
+    when {
+        // İlk arama sürüyor
+        !ui.hasLoaded && ui.loadError == null -> Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = Spacing.l),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
+            Spacer(Modifier.size(Spacing.m))
+            Text(stringResource(R.string.explore_searching), style = MaterialTheme.typography.bodyMedium)
+        }
+
+        requests.isEmpty() && ui.loadError != null -> StateMessage(
+            icon = Icons.Outlined.ErrorOutline,
+            title = stringResource(R.string.explore_load_failed),
+            body = ui.loadError,
+            action = stringResource(R.string.retry),
+            onAction = onRetry
+        )
+
+        requests.isEmpty() -> StateMessage(
+            icon = Icons.Outlined.SearchOff,
+            title = stringResource(R.string.explore_empty_title),
+            body = stringResource(R.string.explore_empty_body),
+            // En geniş alandaysa genişletecek yer yok
+            action = stringResource(R.string.explore_expand_area)
+                .takeIf { ui.radiusKm < RequestLimits.MAX_RADIUS_KM },
+            onAction = onExpand
+        )
+
+        else -> {
+            Text(
+                text = pluralStringResource(R.plurals.explore_results, requests.size, requests.size),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            // Sonuçlar ekrandayken yeniden arama: liste yerinde kalsın, ince bir çizgi yeter
+            if (ui.isLoading) LinearProgressIndicator(Modifier.fillMaxWidth())
+            requests.forEach { request ->
+                NearbyRequestCard(
+                    request = request,
+                    highlighted = request.id == ui.highlightedRequest?.id,
+                    onClick = { onRequestClick(request) }
+                )
+            }
+        }
+    }
+}
+
+/** Liste yerine gösterilen boş/hata durumu: simge, başlık, açıklama ve en fazla bir eylem. */
+@Composable
+private fun StateMessage(
+    icon: ImageVector,
+    title: String,
+    body: String?,
+    action: String?,
+    onAction: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = Spacing.xl, horizontal = Spacing.l),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(40.dp))
+        Spacer(Modifier.height(Spacing.s))
+        Text(title, style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center)
+        if (body != null) {
+            Spacer(Modifier.height(Spacing.xs))
+            Text(body, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        if (action != null) {
+            Spacer(Modifier.height(Spacing.m))
+            OutlinedButton(onClick = onAction) { Text(action) }
+        }
+    }
+}
+
+private val FAB_CLEARANCE = 72.dp

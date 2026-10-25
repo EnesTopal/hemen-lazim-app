@@ -17,6 +17,24 @@
         <item quantity="other">%d okunmamış mesaj</item>
     </plurals>
 
+    <!-- Keşfet -->
+    <string name="explore_search_area">Arama alanı</string>
+    <string name="explore_map_hint">Ayrıntı için haritadaki işarete ya da aşağıdaki talebe dokun.</string>
+    <plurals name="explore_results">
+        <item quantity="one">%d talep · yakından uzağa</item>
+        <item quantity="other">%d talep · yakından uzağa</item>
+    </plurals>
+    <string name="explore_searching">Talepler aranıyor…</string>
+    <string name="explore_empty_title">Bu alanda talep yok</string>
+    <string name="explore_empty_body">Alanı büyütmeyi dene. Yakınında yeni talepler açıldıkça burada görünür.</string>
+    <string name="explore_expand_area">Alanı genişlet</string>
+    <string name="explore_load_failed">Talepler yüklenemedi</string>
+    <string name="explore_missing_requester">Talep sahibi bilgisi bulunamadı</string>
+
+    <!-- Talep kartları -->
+    <string name="time_left">%1$s kaldı</string>
+    <string name="distance_away">%1$s uzakta</string>
+
     <!-- Talep açma -->
     <string name="create_request">Talep aç</string>
     <string name="create_request_title">Yeni talep</string>
