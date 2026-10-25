@@ -74,4 +74,25 @@
     <string name="my_requests_empty_title">Henüz talebin yok</string>
     <string name="my_requests_empty_body">Bir şeye ihtiyacın olduğunda talep aç; yakınındakiler görsün.</string>
     <string name="my_requests_load_failed">Taleplerin yüklenemedi</string>
+    <string name="my_requests_section_open">Açık</string>
+    <string name="my_requests_section_past">Geçmiş</string>
+    <string name="status_open">Açık</string>
+    <string name="status_expired">Süresi doldu</string>
+    <string name="status_completed">Tamamlandı</string>
+    <string name="status_cancelled">İptal edildi</string>
+    <string name="status_matched">Eşleşti</string>
+    <!-- Açık rozeti: "Açık · 2 sa 15 dk kaldı" -->
+    <string name="status_open_with_time">Açık · %1$s kaldı</string>
+    <string name="action_complete">Tamamlandı</string>
+    <string name="action_cancel">İptal et</string>
+    <string name="action_extend">Süre uzat</string>
+    <string name="cancel_confirm_title">Talebi iptal edelim mi?</string>
+    <string name="cancel_confirm_body">İptal edilen talep artık kimseye görünmez.</string>
+    <string name="cancel_confirm_yes">İptal et</string>
+    <string name="cancel_confirm_no">Vazgeç</string>
+    <string name="extend_title">Süreyi uzat</string>
+    <string name="extend_body">Talebin ne kadar daha açık kalsın?</string>
+    <string name="extend_confirm">Uzat</string>
+    <string name="extend_new_end">Yeni bitiş: %1$s</string>
+    <string name="extend_capped">Bir talep en fazla 24 saat sonrasına kadar açık kalabilir.</string>
 </resources>

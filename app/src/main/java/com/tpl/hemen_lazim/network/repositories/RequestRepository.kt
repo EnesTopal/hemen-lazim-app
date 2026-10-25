@@ -1,5 +1,6 @@
 package com.tpl.hemen_lazim.network.repositories
 
+import com.tpl.hemen_lazim.model.DTOs.ExtendRequestDTO
 import com.tpl.hemen_lazim.model.DTOs.MaterialRequestCreateDTO
 import com.tpl.hemen_lazim.model.DTOs.MaterialRequestDTO
 import com.tpl.hemen_lazim.model.enums.Category
@@ -116,6 +117,25 @@ suspend fun create(body: MaterialRequestCreateDTO): Result<Unit> {
             val res = api.complete(id)
             if (res.isSuccessful) {
                 Result.success(res.body()?.message ?: "OK")
+            } else {
+                Result.failure(IllegalStateException(extractApiMessage(res.errorBody()?.string())))
+            }
+        } catch (e: IOException) {
+            Result.failure(IOException("Bağlantı hatası: ${e.message}", e))
+        } catch (e: HttpException) {
+            Result.failure(IllegalStateException("Sunucu hatası: ${e.code()}"))
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /** Açık talebin süresini uzatır; güncel talebi döner (yeni bitiş zamanıyla). */
+    suspend fun extend(id: String, minutes: Int): Result<MaterialRequestDTO> {
+        return try {
+            val res = api.extend(id, ExtendRequestDTO(minutes))
+            val dto = res.body()?.data
+            if (res.isSuccessful && dto != null) {
+                Result.success(dto)
             } else {
                 Result.failure(IllegalStateException(extractApiMessage(res.errorBody()?.string())))
             }
