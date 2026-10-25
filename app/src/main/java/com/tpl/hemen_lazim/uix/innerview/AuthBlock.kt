@@ -66,7 +66,7 @@ fun AuthBlock(
             singleLine = true,
             enabled = enabled,
             isError = ui.usernameError != null,
-            supportingText = ui.usernameError?.let { error -> { Text(error) } },
+            supportingText = ui.usernameError?.let { error -> { Text(stringResource(error)) } },
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
             keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
             modifier = Modifier.fillMaxWidth()
@@ -80,7 +80,7 @@ fun AuthBlock(
                 singleLine = true,
                 enabled = enabled,
                 isError = ui.emailError != null,
-                supportingText = ui.emailError?.let { error -> { Text(error) } },
+                supportingText = ui.emailError?.let { error -> { Text(stringResource(error)) } },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
                 keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
                 modifier = Modifier.fillMaxWidth()
@@ -96,7 +96,7 @@ fun AuthBlock(
             isError = ui.passwordError != null,
             supportingText = when {
                 ui.passwordError != null -> {
-                    { Text(ui.passwordError) }
+                    { Text(stringResource(ui.passwordError)) }
                 }
                 // Kuralı hata almadan önce göster: eski ipucu özel karakter istiyordu, kural istemiyor
                 !ui.isLogin -> {
@@ -123,9 +123,9 @@ fun AuthBlock(
             modifier = Modifier.fillMaxWidth()
         )
 
-        if (!ui.formError.isNullOrBlank()) {
+        if (ui.formError != null) {
             Text(
-                text = ui.formError,
+                text = stringResource(ui.formError),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.error
             )

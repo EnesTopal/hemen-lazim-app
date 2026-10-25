@@ -1,5 +1,6 @@
 package com.tpl.hemen_lazim.uix.innerview
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -113,7 +114,11 @@ private fun ColumnScope.WhatSection(ui: MaterialFormState, actions: CreateFormAc
         isError = ui.titleError != null,
         supportingText = {
             Row(Modifier.fillMaxWidth()) {
-                Text(ui.titleError ?: "", Modifier.weight(1f), color = MaterialTheme.colorScheme.error)
+                Text(
+                    ui.titleError?.let { stringResource(it) } ?: "",
+                    Modifier.weight(1f),
+                    color = MaterialTheme.colorScheme.error
+                )
                 Text(stringResource(R.string.form_counter, ui.title.length, TITLE_MAX))
             }
         },
@@ -209,11 +214,11 @@ private fun QuantityStepper(
 }
 
 @Composable
-private fun FieldLabel(text: String, error: String?) {
+private fun FieldLabel(text: String, @StringRes error: Int?) {
     Column {
         Text(text, style = MaterialTheme.typography.labelLarge)
         if (error != null) {
-            Text(error, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+            Text(stringResource(error), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
         }
     }
 }

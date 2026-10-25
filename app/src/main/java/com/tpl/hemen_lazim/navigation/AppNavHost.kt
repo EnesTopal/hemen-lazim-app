@@ -16,6 +16,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -25,6 +26,7 @@ import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.tpl.hemen_lazim.ChatDeepLink
+import com.tpl.hemen_lazim.R
 import com.tpl.hemen_lazim.network.WebSocketManager
 import com.tpl.hemen_lazim.network.repositories.ChatUnreadStore
 import com.tpl.hemen_lazim.session.SessionEvents
@@ -53,7 +55,8 @@ fun AppNavHost(
     val navController = rememberNavController()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-    val appSnackbar = remember { AppSnackbar(snackbarHostState, scope) }
+    val resources = LocalContext.current.resources
+    val appSnackbar = remember(resources) { AppSnackbar(snackbarHostState, scope, resources) }
     val currentEntry by navController.currentBackStackEntryAsState()
     val currentRoute = currentEntry?.destination?.route
     val loggedIn = currentRoute != null && currentRoute != Routes.AUTH
@@ -69,7 +72,7 @@ fun AppNavHost(
             ChatUnreadStore.clear()
             if (navController.currentDestination?.route != Routes.AUTH) {
                 navController.navigateToAuth()
-                appSnackbar.show("Oturumun sona erdi, lütfen tekrar giriş yap")
+                appSnackbar.show(R.string.session_expired)
             }
         }
     }

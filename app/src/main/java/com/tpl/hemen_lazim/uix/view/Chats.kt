@@ -77,7 +77,7 @@ private fun ChatsContent(
                 ui.chats.isEmpty() && ui.error != null ->
                         CenteredMessage(
                                 title = stringResource(R.string.chats_load_failed),
-                                body = ui.error,
+                                body = stringResource(ui.error),
                                 action = stringResource(R.string.retry),
                                 onAction = onRefresh
                         )

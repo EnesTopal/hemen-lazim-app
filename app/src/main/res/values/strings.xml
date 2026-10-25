@@ -7,6 +7,34 @@
     <string name="retry">Tekrar dene</string>
     <string name="refresh">Yenile</string>
 
+    <!-- Hatalar: sunucunun hata koduna göre (ui/ErrorMessages.kt); bilinmeyen kodda HTTP durumuna göre -->
+    <string name="error_network">Sunucuya ulaşılamadı. İnternet bağlantını kontrol edip tekrar dene.</string>
+    <string name="error_unknown">Bir şeyler ters gitti. Lütfen tekrar dene.</string>
+    <string name="error_server">Sunucuda bir sorun oluştu. Biraz sonra tekrar dene.</string>
+    <string name="error_request_failed">İstek işlenemedi. Lütfen tekrar dene.</string>
+    <string name="error_forbidden">Bu işlem için yetkin yok.</string>
+    <string name="error_not_found">Aradığın kayıt bulunamadı.</string>
+    <string name="error_conflict">Bu işlem şu an yapılamıyor. Sayfayı yenileyip tekrar dene.</string>
+    <string name="error_validation">Bazı bilgiler eksik ya da hatalı.</string>
+    <string name="error_request_not_found">Talep bulunamadı; silinmiş olabilir.</string>
+    <string name="error_request_not_open">Bu talep artık açık değil.</string>
+    <string name="error_not_request_owner">Bu talebi yalnızca sahibi değiştirebilir.</string>
+    <string name="error_offer_on_own_request">Kendi talebine teklif veremezsin.</string>
+    <string name="error_user_not_found">Kullanıcı bulunamadı.</string>
+    <string name="error_chat_with_self">Kendinle sohbet başlatamazsın.</string>
+    <string name="error_not_chat_member">Bu sohbete erişimin yok.</string>
+    <string name="error_message_empty">Boş mesaj gönderilemez.</string>
+    <string name="error_message_too_long">Mesaj çok uzun.</string>
+    <string name="error_invalid_credentials">Kullanıcı adı ya da şifre hatalı.</string>
+    <string name="error_account_disabled">Bu hesap devre dışı bırakılmış.</string>
+    <string name="error_account_locked">Bu hesap kilitlenmiş.</string>
+    <string name="error_authentication_failed">Giriş yapılamadı. Lütfen tekrar dene.</string>
+    <string name="error_username_invalid">Kullanıcı adı 3 ile 50 karakter arasında olmalı</string>
+    <string name="error_password_too_long">Şifre çok uzun</string>
+    <string name="error_username_taken">Bu kullanıcı adı alınmış</string>
+    <string name="error_email_taken">Bu e-posta zaten kayıtlı</string>
+    <string name="session_expired">Oturumun sona erdi, lütfen tekrar giriş yap.</string>
+
     <!-- Alt bar -->
     <string name="tab_explore">Keşfet</string>
     <string name="tab_my_requests">İlanlarım</string>
@@ -30,6 +58,8 @@
     <string name="explore_expand_area">Alanı genişlet</string>
     <string name="explore_load_failed">Talepler yüklenemedi</string>
     <string name="explore_missing_requester">Talep sahibi bilgisi bulunamadı</string>
+    <string name="offer_sent">Talep sahibine haber verildi</string>
+    <string name="offer_already_sent">Talep sahibine zaten haber vermiştin</string>
 
     <!-- Talep kartları -->
     <string name="time_left">%1$s kaldı</string>
@@ -68,6 +98,11 @@
     <string name="auth_password_rule">En az 8 karakter, harf ve rakam</string>
     <string name="auth_show_password">Şifreyi göster</string>
     <string name="auth_hide_password">Şifreyi gizle</string>
+    <string name="auth_error_username_required">Kullanıcı adı zorunlu</string>
+    <string name="auth_error_email_required">E-posta zorunlu</string>
+    <string name="auth_error_email_invalid">Geçersiz e-posta</string>
+    <string name="auth_error_password_required">Şifre zorunlu</string>
+    <string name="auth_registered">Kayıt başarılı, şimdi giriş yap</string>
 
     <!-- Profil -->
     <string name="profile_notifications">Bildirim ayarları</string>
@@ -103,6 +138,11 @@
     <string name="notification_prompt_body">Biri “Bende var” dediğinde bildirimle haber veririz. İzni sonra Profil\'den de açabilirsin.</string>
     <string name="notification_prompt_allow">İzin ver</string>
     <string name="notification_prompt_later">Şimdi değil</string>
+    <string name="form_error_title_required">Başlık gerekli</string>
+    <string name="form_error_category_required">Kategori seç</string>
+    <string name="form_error_quantity_positive">Miktar sıfırdan büyük olmalı</string>
+    <string name="form_error_location">Haritadan bir konum seç</string>
+    <string name="request_published">Talebin yayında</string>
 
     <!-- İlanlarım -->
     <string name="my_requests_empty_title">Henüz talebin yok</string>
@@ -129,4 +169,7 @@
     <string name="extend_confirm">Uzat</string>
     <string name="extend_new_end">Yeni bitiş: %1$s</string>
     <string name="extend_capped">Bir talep en fazla 24 saat sonrasına kadar açık kalabilir.</string>
+    <string name="request_completed">Talep tamamlandı</string>
+    <string name="request_cancelled">Talep iptal edildi</string>
+    <string name="request_extended">Süre uzatıldı</string>
 </resources>

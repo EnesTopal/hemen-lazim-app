@@ -217,7 +217,7 @@ private fun Results(
         requests.isEmpty() && ui.loadError != null -> StateMessage(
             icon = Icons.Outlined.ErrorOutline,
             title = stringResource(R.string.explore_load_failed),
-            body = ui.loadError,
+            body = ui.loadError?.let { stringResource(it) },
             action = stringResource(R.string.retry),
             onAction = onRetry
         )

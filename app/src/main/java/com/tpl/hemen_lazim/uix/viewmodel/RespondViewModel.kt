@@ -1,12 +1,15 @@
 package com.tpl.hemen_lazim.uix.viewmodel
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tpl.hemen_lazim.R
 import com.tpl.hemen_lazim.model.DTOs.MaterialRequestDTO
 import com.tpl.hemen_lazim.model.RequestLimits
 import com.tpl.hemen_lazim.network.repositories.ChatRepository
 import com.tpl.hemen_lazim.network.repositories.NotificationRepository
 import com.tpl.hemen_lazim.network.repositories.RequestRepository
+import com.tpl.hemen_lazim.ui.messageRes
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,8 +27,8 @@ data class RespondUiState(
         // En az bir arama tamamlandı mı: "henüz aranmadı" ile "bu alanda talep yok" ayrışsın
         val hasLoaded: Boolean = false,
         // Son arama başarısızsa nedeni; eski liste ekranda kalır
-        val loadError: String? = null,
-        val toastMessage: String? = null,
+        @StringRes val loadError: Int? = null,
+        @StringRes val toastMessage: Int? = null,
         val selectedRequest: MaterialRequestDTO? = null,
         // Son dokunulan talep: detay kapandıktan sonra da dairesi haritada kalır
         val highlightedRequest: MaterialRequestDTO? = null,
@@ -90,8 +93,7 @@ class RespondViewModel(
                                     radius = radiusMeters,
                                     category = null // Search all categories
                             )
-                    // Depo iptali de Result.failure olarak döndürüyor; iptal edilen istek ne
-                    // sonuç ne de "iptal edildi" toast'ı yazsın
+                    // Yeni bir arama bu isteği iptal ettiyse eski sonuç yazılmasın
                     ensureActive()
 
                     if (result.isSuccess) {
@@ -113,8 +115,8 @@ class RespondViewModel(
                         _ui.update {
                             it.copy(
                                     isLoading = false,
-                                    loadError = result.exceptionOrNull()?.message
-                                                    ?: "Talepler yüklenemedi"
+                                    loadError = result.exceptionOrNull()?.messageRes()
+                                                    ?: R.string.error_unknown
                             )
                         }
                     }
@@ -127,23 +129,19 @@ class RespondViewModel(
 
                 val result = notificationRepo.sendSupplyOfferNotification(requestId, requesterId)
 
-                if (result.isSuccess) {
-                    // Sunucunun mesajı: "Requester notified" ya da aynı talebe tekrar basınca
-                    // "Requester already notified" (ikinci bir bildirim gitmez). Sunucu İngilizce
-                    // konuşuyor; Türkçeleştirme arayüz tarafında sonra yapılacak.
-                    _ui.update {
-                        it.copy(isSendingNotification = false, toastMessage = result.getOrNull())
-                    }
-                    onSuccess()
-                } else {
-                    _ui.update {
-                        it.copy(
-                                isSendingNotification = false,
-                                toastMessage = result.exceptionOrNull()?.message
-                                                ?: "Bildirim gönderilemedi"
-                        )
-                    }
-                }
+                result
+                        .onSuccess { notifiedNow ->
+                            // Aynı talebe tekrar basınca sunucu ikinci bir bildirim göndermiyor
+                            val message =
+                                    if (notifiedNow) R.string.offer_sent else R.string.offer_already_sent
+                            _ui.update { it.copy(isSendingNotification = false, toastMessage = message) }
+                            onSuccess()
+                        }
+                        .onFailure { e ->
+                            _ui.update {
+                                it.copy(isSendingNotification = false, toastMessage = e.messageRes())
+                            }
+                        }
             }
 
     fun createChatRoom(senderId: String, recipientId: String, onSuccess: (String) -> Unit) =
@@ -152,9 +150,7 @@ class RespondViewModel(
                     val roomId = chatRepo.createRoom(senderId, recipientId)
                     onSuccess(roomId)
                 } catch (e: Exception) {
-                    _ui.update {
-                        it.copy(toastMessage = "Sohbet odası oluşturulamadı: ${e.message}")
-                    }
+                    _ui.update { it.copy(toastMessage = e.messageRes()) }
                 }
             }
 }

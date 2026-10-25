@@ -6,93 +6,46 @@ import com.tpl.hemen_lazim.model.DTOs.*
 import com.tpl.hemen_lazim.network.services.AuthService
 import com.tpl.hemen_lazim.network.RetrofitClient
 import com.tpl.hemen_lazim.network.WebSocketManager
+import com.tpl.hemen_lazim.network.apiResult
+import com.tpl.hemen_lazim.network.bodyOrThrow
+import com.tpl.hemen_lazim.network.toApiException
 import com.tpl.hemen_lazim.utils.SharedPreferencesProvider
 import com.tpl.hemen_lazim.firebase.FirebaseTokenManager
-import org.json.JSONObject
-import retrofit2.HttpException
-import java.io.IOException
 
+/** Hatalar Result.failure: bağlantı yoksa IOException, sunucu reddederse kodlu ApiException. */
 class AuthRepository(
     private val api: AuthService = RetrofitClient.retrofit.create(AuthService::class.java)
 ) {
 
-    suspend fun login(createUserDTO: CreateUserDTO, context: Context? = null): Result<Unit> {
-        return try {
-            val res = api.login(createUserDTO)
-            if (res.isSuccessful) {
-                val tr = res.body()?.data
-                if (tr != null && tr.accessToken.isNotBlank() && tr.refreshToken.isNotBlank()) {
-                    SharedPreferencesProvider.saveSession(tr.accessToken, tr.refreshToken)
-                    
-                    // Initialize FCM token after successful login
-                    context?.let {
-                        try {
-                            FirebaseTokenManager.initializeFcmToken(it)
-                            Log.d("AuthRepository", "FCM token initialization started")
-                        } catch (e: Exception) {
-                            Log.e("AuthRepository", "Failed to initialize FCM token", e)
-                            // Don't fail login if FCM token fails
-                        }
-                    }
-                    
-                    Result.success(Unit)
-                } else {
-                    Result.failure(IllegalStateException("Boş token(lar) döndü"))
-                }
-            } else {
-                Result.failure(IllegalStateException(extractApiMessage(res.errorBody()?.string())))
+    suspend fun login(createUserDTO: CreateUserDTO, context: Context? = null): Result<Unit> = apiResult {
+        saveTokens(api.login(createUserDTO).bodyOrThrow()?.data)
+
+        // Initialize FCM token after successful login
+        context?.let {
+            try {
+                FirebaseTokenManager.initializeFcmToken(it)
+                Log.d("AuthRepository", "FCM token initialization started")
+            } catch (e: Exception) {
+                Log.e("AuthRepository", "Failed to initialize FCM token", e)
+                // Don't fail login if FCM token fails
             }
-        } catch (e: IOException) {
-            Result.failure(IOException("Bağlantı hatası: ${e.message}", e))
-        } catch (e: HttpException) {
-            Result.failure(IllegalStateException("Sunucu hatası: ${e.code()}"))
-        } catch (e: Exception) {
-            Result.failure(e)
         }
     }
 
-    suspend fun register(createUserDTO: CreateUserDTO): Result<UserDTO> {
-        return try {
-            val res = api.register(createUserDTO)
-            if (res.isSuccessful) {
-                val user = res.body()?.data
-                if (user != null) Result.success(user)
-                else Result.failure(IllegalStateException("Kullanıcı bilgisi boş"))
-            } else {
-                Result.failure(IllegalStateException(extractApiMessage(res.errorBody()?.string())))
-            }
-        } catch (e: IOException) {
-            Result.failure(IOException("Bağlantı hatası: ${e.message}", e))
-        } catch (e: HttpException) {
-            Result.failure(IllegalStateException("Sunucu hatası: ${e.code()}"))
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+    suspend fun register(createUserDTO: CreateUserDTO): Result<UserDTO> = apiResult {
+        api.register(createUserDTO).bodyOrThrow()?.data ?: error("Register response has no user")
     }
 
-    suspend fun refresh(refreshToken: String): Result<Unit> {
-        return try {
-            val res = api.refresh(RefreshRequest(refreshToken))
-            if (res.isSuccessful) {
-                val tr = res.body()?.data
-                if (tr != null && tr.accessToken.isNotBlank() && tr.refreshToken.isNotBlank()) {
-                    SharedPreferencesProvider.saveSession(tr.accessToken, tr.refreshToken)
-                    Result.success(Unit)
-                } else {
-                    Result.failure(IllegalStateException("Boş token(lar) döndü"))
-                }
-            } else {
-                Result.failure(IllegalStateException(extractApiMessage(res.errorBody()?.string())))
-            }
-        } catch (e: IOException) {
-            Result.failure(IOException("Bağlantı hatası: ${e.message}", e))
-        } catch (e: HttpException) {
-            Result.failure(IllegalStateException("Sunucu hatası: ${e.code()}"))
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+    suspend fun refresh(refreshToken: String): Result<Unit> = apiResult {
+        saveTokens(api.refresh(RefreshRequest(refreshToken)).bodyOrThrow()?.data)
     }
 
+    private fun saveTokens(tokens: TokenResponse?) {
+        check(tokens != null && tokens.accessToken.isNotBlank() && tokens.refreshToken.isNotBlank()) {
+            "Token response is empty"
+        }
+        SharedPreferencesProvider.saveSession(tokens.accessToken, tokens.refreshToken)
+    }
 
     suspend fun logout(): Result<Unit> {
         // Ağdan bağımsız ve anında: canlı mesajlar bu hesaptan kopsun
@@ -111,7 +64,7 @@ class AuthRepository(
                 // Başarılı ya da değil — local session'ı temizle
                 SharedPreferencesProvider.clearSession()
                 if (res.isSuccessful) Result.success(Unit)
-                else Result.failure(IllegalStateException(extractApiMessage(res.errorBody()?.string())))
+                else Result.failure(res.toApiException())
             } catch (_: Exception) {
                 SharedPreferencesProvider.clearSession()
                 Result.success(Unit)
@@ -121,12 +74,5 @@ class AuthRepository(
             // yenilemesi bu hesabın sayılarını geri yazmış olabilir
             ChatUnreadStore.clear()
         }
-    }
-
-    private fun extractApiMessage(raw: String?): String {
-        if (raw.isNullOrBlank()) return "Bir hata oluştu."
-        return try {
-            JSONObject(raw).optString("message").ifBlank { "Bir hata oluştu." }
-        } catch (_: Exception) { raw }
     }
 }

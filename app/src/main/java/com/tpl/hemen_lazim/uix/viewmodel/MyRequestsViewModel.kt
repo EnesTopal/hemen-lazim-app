@@ -1,10 +1,13 @@
 package com.tpl.hemen_lazim.uix.viewmodel
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tpl.hemen_lazim.R
 import com.tpl.hemen_lazim.model.DTOs.MaterialRequestDTO
 import com.tpl.hemen_lazim.model.enums.RequestStatus
 import com.tpl.hemen_lazim.network.repositories.RequestRepository
+import com.tpl.hemen_lazim.ui.messageRes
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -15,11 +18,11 @@ import kotlinx.coroutines.launch
 data class MyRequestsUiState(
     val requests: List<MaterialRequestDTO> = emptyList(),
     val isLoading: Boolean = false,
-    val loadError: String? = null,
+    @StringRes val loadError: Int? = null,
     // Üzerinde işlem süren talepler: butonları kapalı, yanında gösterge
     val busyIds: Set<String> = emptySet(),
     // Tek seferlik geri bildirim (Snackbar)
-    val message: String? = null
+    @StringRes val message: Int? = null
 )
 
 class MyRequestsViewModel(
@@ -38,15 +41,15 @@ class MyRequestsViewModel(
             _ui.update { it.copy(isLoading = true, loadError = null) }
             repo.listMine()
                 .onSuccess { list -> _ui.update { it.copy(requests = list, isLoading = false) } }
-                .onFailure { e -> _ui.update { it.copy(isLoading = false, loadError = e.message) } }
+                .onFailure { e -> _ui.update { it.copy(isLoading = false, loadError = e.messageRes()) } }
         }
     }
 
     fun complete(id: String) =
-        runAction(id, RequestStatus.COMPLETED, "Talep tamamlandı") { repo.complete(id) }
+        runAction(id, RequestStatus.COMPLETED, R.string.request_completed) { repo.complete(id) }
 
     fun cancel(id: String) =
-        runAction(id, RequestStatus.CANCELLED, "Talep iptal edildi") { repo.cancel(id) }
+        runAction(id, RequestStatus.CANCELLED, R.string.request_cancelled) { repo.cancel(id) }
 
     fun extend(id: String, minutes: Int) {
         if (id in _ui.value.busyIds) return
@@ -57,7 +60,7 @@ class MyRequestsViewModel(
                     _ui.update { s ->
                         s.copy(
                             requests = s.requests.map { if (it.id == id) updated else it },
-                            message = "Süre uzatıldı"
+                            message = R.string.request_extended
                         )
                     }
                 }
@@ -71,7 +74,7 @@ class MyRequestsViewModel(
     private fun runAction(
         id: String,
         newStatus: RequestStatus,
-        successMessage: String,
+        @StringRes successMessage: Int,
         call: suspend () -> Result<*>
     ) {
         if (id in _ui.value.busyIds) return
@@ -94,7 +97,7 @@ class MyRequestsViewModel(
 
     // Çoğunlukla talep bu arada kapanmıştır (süresi doldu): mesajı göster, listeyi tazele
     private fun onActionFailed(e: Throwable) {
-        _ui.update { it.copy(message = e.message ?: "İşlem yapılamadı") }
+        _ui.update { it.copy(message = e.messageRes()) }
         refresh()
     }
 }

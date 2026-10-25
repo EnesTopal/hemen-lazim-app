@@ -146,7 +146,7 @@ private fun MyRequestsContent(
                 ui.requests.isEmpty() && ui.loadError != null ->
                     CenteredMessage(
                         title = stringResource(R.string.my_requests_load_failed),
-                        body = ui.loadError,
+                        body = ui.loadError?.let { stringResource(it) },
                         action = stringResource(R.string.retry),
                         onAction = onRefresh
                     )

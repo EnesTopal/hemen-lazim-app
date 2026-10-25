@@ -1,5 +1,6 @@
 package com.tpl.hemen_lazim.uix.viewmodel
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tpl.hemen_lazim.model.Message
@@ -7,6 +8,7 @@ import com.tpl.hemen_lazim.network.WebSocketManager
 import com.tpl.hemen_lazim.network.repositories.ChatRepository
 import com.tpl.hemen_lazim.network.repositories.ChatUnreadStore
 import com.tpl.hemen_lazim.network.repositories.UserRepository
+import com.tpl.hemen_lazim.ui.messageRes
 import com.tpl.hemen_lazim.utils.SharedPreferencesProvider
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -18,7 +20,7 @@ import kotlinx.coroutines.launch
 data class ChatsUiState(
         val chats: List<Message> = emptyList(),
         val isLoading: Boolean = false,
-        val error: String? = null,
+        @StringRes val error: Int? = null,
         val currentUserId: String = "",
         val userNames: Map<String, String> = emptyMap()
 )
@@ -49,10 +51,10 @@ class ChatsViewModel(
                 _ui.update { it.copy(isLoading = true) }
                 try {
                     val chats = chatRepo.getUserChats(userId)
-                    _ui.update { it.copy(chats = chats, isLoading = false) }
+                    _ui.update { it.copy(chats = chats, isLoading = false, error = null) }
                     resolveUserNames(chats, userId)
                 } catch (e: Exception) {
-                    _ui.update { it.copy(isLoading = false, error = e.message) }
+                    _ui.update { it.copy(isLoading = false, error = e.messageRes()) }
                 }
             }
 

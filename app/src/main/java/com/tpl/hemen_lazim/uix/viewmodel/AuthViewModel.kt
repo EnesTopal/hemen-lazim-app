@@ -4,9 +4,13 @@ import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tpl.hemen_lazim.R
 import com.tpl.hemen_lazim.model.AuthUiState
 import com.tpl.hemen_lazim.model.DTOs.CreateUserDTO
+import com.tpl.hemen_lazim.network.ApiCodes
+import com.tpl.hemen_lazim.network.ApiException
 import com.tpl.hemen_lazim.network.repositories.AuthRepository
+import com.tpl.hemen_lazim.ui.messageRes
 import com.tpl.hemen_lazim.utils.AuthValidator
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -61,7 +65,7 @@ class AuthViewModel(
 
         if ((!s.isLogin && emailErr != null) || (!s.isLogin && passErr != null) || s.username.isBlank()) {
             val firstMsg = when {
-                s.username.isBlank() -> "Kullanıcı adı zorunlu"
+                s.username.isBlank() -> R.string.auth_error_username_required
                 !s.isLogin && emailErr != null -> emailErr
                 !s.isLogin && passErr != null -> passErr
                 else -> null
@@ -81,43 +85,34 @@ class AuthViewModel(
 
             if (s.isLogin) {
                 val res = repo.login(CreateUserDTO(s.username, s.password), appContext)
-                if (res.isSuccess) {
+                res.onSuccess {
                     _ui.update { it.copy(isLoading = false) }
                     onLoginSuccessNavigate()
-                } else {
-                    _ui.update {
-                        it.copy(
-                            isLoading = false,
-                            toastMessage = res.exceptionOrNull()?.message ?: "Hata"
-                        )
-                    }
+                }.onFailure { e ->
+                    _ui.update { it.copy(isLoading = false, toastMessage = e.messageRes()) }
                 }
             } else {
                 val body =
                     CreateUserDTO(userName = s.username, userPassword = s.password, email = s.email)
                 val res = repo.register(body)
-                if (res.isSuccess) {
+                res.onSuccess {
                     _ui.update {
-                        it.copy(
-                            isLoading = false,
-                            isLogin = true,
-                            toastMessage = "Kayıt başarılı, şimdi giriş yapın"
-                        )
+                        it.copy(isLoading = false, isLogin = true, toastMessage = R.string.auth_registered)
                     }
                     onRegisterSwitchedToLogin()
-                } else {
-                    // Sunucu İngilizce konuşuyor; bilinen iki çakışma ilgili alanın altında Türkçe
-                    // gösterilir, geri kalan mesajlar olduğu gibi
-                    val msg = res.exceptionOrNull()?.message ?: "Hata"
-                    val usernameTaken = msg.contains("Username already in use", ignoreCase = true)
-                    val emailTaken = msg.contains("Email already in use", ignoreCase = true)
+                }.onFailure { e ->
+                    // Bir alana ait sunucu hatası o alanın altında, diğerleri mesaj olarak
+                    val message = e.messageRes()
                     _ui.update {
-                        it.copy(
-                            isLoading = false,
-                            usernameError = if (usernameTaken) "Bu kullanıcı adı alınmış" else it.usernameError,
-                            emailError = if (emailTaken) "Bu e-posta zaten kayıtlı" else it.emailError,
-                            toastMessage = if (usernameTaken || emailTaken) null else msg
-                        )
+                        when ((e as? ApiException)?.code) {
+                            ApiCodes.USERNAME_TAKEN, ApiCodes.USERNAME_INVALID ->
+                                it.copy(isLoading = false, usernameError = message)
+                            ApiCodes.EMAIL_TAKEN, ApiCodes.EMAIL_INVALID ->
+                                it.copy(isLoading = false, emailError = message)
+                            ApiCodes.PASSWORD_INVALID, ApiCodes.PASSWORD_TOO_LONG ->
+                                it.copy(isLoading = false, passwordError = message)
+                            else -> it.copy(isLoading = false, toastMessage = message)
+                        }
                     }
                 }
             }

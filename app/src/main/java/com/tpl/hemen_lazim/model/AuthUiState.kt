@@ -1,16 +1,19 @@
 package com.tpl.hemen_lazim.model
 
+import androidx.annotation.StringRes
+
 data class AuthUiState(
     val isLogin: Boolean = true,
     val username: String = "",
     val email: String = "",
     val password: String = "",
     val isLoading: Boolean = false,
-    val toastMessage: String? = null,
-    val usernameError: String? = null,
-    val emailError: String? = null,
-    val passwordError: String? = null,
-    val formError: String? = null
+    // Mesajlar strings.xml kimliği: metin telefonun dilinde ekranda çözülür
+    @StringRes val toastMessage: Int? = null,
+    @StringRes val usernameError: Int? = null,
+    @StringRes val emailError: Int? = null,
+    @StringRes val passwordError: Int? = null,
+    @StringRes val formError: Int? = null
 ) {
     val canSubmit: Boolean
         get() = !isLoading &&

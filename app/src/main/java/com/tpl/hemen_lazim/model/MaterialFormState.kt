@@ -1,5 +1,6 @@
 package com.tpl.hemen_lazim.model
 
+import androidx.annotation.StringRes
 import com.tpl.hemen_lazim.model.enums.Category
 import com.tpl.hemen_lazim.model.enums.Units
 
@@ -14,15 +15,16 @@ data class MaterialFormState(
     val longitude: String = "",
     val radiusKm: Float = RequestLimits.DEFAULT_REQUEST_RADIUS_KM,
     val durationMinutes: Int = RequestLimits.DEFAULT_DURATION_MIN,
-    val titleError: String? = null,
-    val categoryError: String? = null,
-    val quantityError: String? = null,
-    val unitError: String? = null,
-    val latError: String? = null,
-    val lonError: String? = null,
+    // Hata ve mesajlar strings.xml kimliği: metin telefonun dilinde ekranda çözülür
+    @StringRes val titleError: Int? = null,
+    @StringRes val categoryError: Int? = null,
+    @StringRes val quantityError: Int? = null,
+    @StringRes val unitError: Int? = null,
+    @StringRes val latError: Int? = null,
+    @StringRes val lonError: Int? = null,
     // UI
     val isSubmitting: Boolean = false,
-    val toastMessage: String? = null,
+    @StringRes val toastMessage: Int? = null,
     val success: Boolean = false
 ) {
     val canSubmit: Boolean
