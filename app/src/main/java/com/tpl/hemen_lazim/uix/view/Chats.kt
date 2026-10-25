@@ -1,13 +1,11 @@
 package com.tpl.hemen_lazim.uix.view
 
-import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -15,125 +13,134 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.tpl.hemen_lazim.R
 import com.tpl.hemen_lazim.model.Message
-import com.tpl.hemen_lazim.network.repositories.ChatUnreadStore
 import com.tpl.hemen_lazim.navigation.Routes
+import com.tpl.hemen_lazim.network.repositories.ChatUnreadStore
+import com.tpl.hemen_lazim.ui.theme.Spacing
+import com.tpl.hemen_lazim.uix.innerview.Avatar
 import com.tpl.hemen_lazim.uix.viewmodel.ChatsViewModel
-import java.text.SimpleDateFormat
-import java.util.*
+import com.tpl.hemen_lazim.utils.formatChatListTime
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Chats(navController: NavController, viewModel: ChatsViewModel = viewModel()) {
-    val ui by viewModel.ui.collectAsState()
-    val unreadByRoom by ChatUnreadStore.unreadByRoom.collectAsState()
+    val ui by viewModel.ui.collectAsStateWithLifecycle()
+    val unreadByRoom by ChatUnreadStore.unreadByRoom.collectAsStateWithLifecycle()
+    // Yalnızca kullanıcı aşağı çektiğinde gösterge; yeni mesajla gelen tazelemeler sessiz
+    var pulling by remember { mutableStateOf(false) }
+    LaunchedEffect(ui.isLoading) { if (!ui.isLoading) pulling = false }
 
-    // Refresh on resume
+    // Sekmeye her girişte tazele
     LaunchedEffect(Unit) { viewModel.refresh() }
 
     Scaffold(topBar = { CenterAlignedTopAppBar(title = { Text(stringResource(R.string.tab_chats)) }) }) {
             padding ->
-        Box(Modifier.fillMaxSize().padding(padding)) {
-            if (ui.isLoading) {
-                CircularProgressIndicator(Modifier.align(Alignment.Center))
-            } else if (ui.chats.isEmpty()) {
-                Text(
-                        "Henüz sohbetiniz yok.",
-                        modifier = Modifier.align(Alignment.Center),
-                        style = MaterialTheme.typography.bodyLarge
-                )
-            } else {
-                LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(ui.chats) { message ->
-                        ChatItem(
-                                message = message,
-                                currentUserId = ui.currentUserId,
-                                userNames = ui.userNames,
-                                hasUnread = (unreadByRoom[message.roomId] ?: 0) > 0,
-                                onClick = {
-                                    val otherUserId =
-                                            if (message.senderId == ui.currentUserId)
-                                                    message.recipientId
-                                            else message.senderId
-                                    navController.navigate(
-                                            Routes.chat(message.roomId, ui.currentUserId, otherUserId)
-                                    )
-                                }
+        PullToRefreshBox(
+                isRefreshing = pulling,
+                onRefresh = {
+                    pulling = true
+                    viewModel.refresh()
+                },
+                modifier = Modifier.fillMaxSize().padding(padding)
+        ) {
+            when {
+                ui.chats.isEmpty() && ui.isLoading ->
+                        Box(Modifier.fillMaxSize()) {
+                            CircularProgressIndicator(Modifier.align(Alignment.Center))
+                        }
+                ui.chats.isEmpty() && ui.error != null ->
+                        CenteredMessage(
+                                title = stringResource(R.string.chats_load_failed),
+                                body = ui.error,
+                                action = stringResource(R.string.retry),
+                                onAction = viewModel::refresh
                         )
-                    }
-                }
+                ui.chats.isEmpty() ->
+                        CenteredMessage(
+                                title = stringResource(R.string.chats_empty_title),
+                                body = stringResource(R.string.chats_empty_body),
+                                action = null,
+                                onAction = {}
+                        )
+                else ->
+                        LazyColumn(
+                                modifier = Modifier.fillMaxSize(),
+                                contentPadding = PaddingValues(vertical = Spacing.s)
+                        ) {
+                            items(ui.chats, key = { it.roomId }) { message ->
+                                val otherUserId =
+                                        if (message.senderId == ui.currentUserId) message.recipientId
+                                        else message.senderId
+                                ChatItem(
+                                        message = message,
+                                        isOwn = message.senderId == ui.currentUserId,
+                                        otherUserName = ui.userNames[otherUserId],
+                                        unread = unreadByRoom[message.roomId] ?: 0,
+                                        onClick = {
+                                            navController.navigate(
+                                                    Routes.chat(message.roomId, ui.currentUserId, otherUserId)
+                                            )
+                                        }
+                                )
+                            }
+                        }
             }
         }
     }
 }
 
 @Composable
-fun ChatItem(
+private fun ChatItem(
         message: Message,
-        currentUserId: String,
-        userNames: Map<String, String>,
-        hasUnread: Boolean,
+        isOwn: Boolean,
+        otherUserName: String?,
+        unread: Int,
         onClick: () -> Unit
 ) {
-    val otherUserId =
-            if (message.senderId == currentUserId) message.recipientId else message.senderId
-    val otherUserName = userNames[otherUserId] ?: otherUserId
-    val date = Date(message.serverTimestamp)
-    val format = SimpleDateFormat("dd MMM HH:mm", Locale.getDefault())
-
-    Card(
-            onClick = onClick,
-            modifier = Modifier.fillMaxWidth(),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Row(
-                modifier = Modifier.padding(16.dp).fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = null,
-                    modifier = Modifier.size(40.dp),
-                    tint = MaterialTheme.colorScheme.primary
-            )
-            Spacer(modifier = Modifier.width(16.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                            text = otherUserName,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = if (hasUnread) FontWeight.Bold else null
-                    )
-                    if (hasUnread) {
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Box(
-                                modifier =
-                                        Modifier.size(9.dp)
-                                                .background(MaterialTheme.colorScheme.error, CircleShape)
-                        )
-                    }
-                }
+    val hasUnread = unread > 0
+    val preview = if (isOwn) stringResource(R.string.chats_you_prefix, message.content) else message.content
+    ListItem(
+            modifier = Modifier.clickable(onClick = onClick),
+            leadingContent = { Avatar(otherUserName ?: "", size = 48.dp) },
+            headlineContent = {
                 Text(
-                        text = message.content,
-                        style = MaterialTheme.typography.bodyMedium,
+                        // İsim gelene kadar kimlik yerine boşluk: UUID göstermek anlamsız
+                        text = otherUserName ?: "…",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = if (hasUnread) FontWeight.Bold else FontWeight.Normal,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                )
+            },
+            supportingContent = {
+                Text(
+                        text = preview,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        fontWeight = if (hasUnread) FontWeight.SemiBold else FontWeight.Normal,
+                        color =
+                                if (hasUnread) MaterialTheme.colorScheme.onSurface
+                                else MaterialTheme.colorScheme.onSurfaceVariant
                 )
+            },
+            trailingContent = {
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                            text = formatChatListTime(message.serverTimestamp),
+                            style = MaterialTheme.typography.labelSmall,
+                            color =
+                                    if (hasUnread) MaterialTheme.colorScheme.primary
+                                    else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    if (hasUnread) {
+                        Spacer(Modifier.height(Spacing.xs))
+                        Badge { Text(if (unread > 99) "99+" else unread.toString()) }
+                    }
+                }
             }
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                    text = format.format(date),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
+    )
 }

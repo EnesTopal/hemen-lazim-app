@@ -11,6 +11,8 @@ import com.tpl.hemen_lazim.network.repositories.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.launch
 import java.util.UUID
 
@@ -30,6 +32,10 @@ class ChatViewModel(
 
     private val _otherUserName = MutableStateFlow("")
     val otherUserName: StateFlow<String> = _otherUserName.asStateFlow()
+
+    /** Soket bağlı mı: ekran, emniyet yoklamasını buna göre seyrekleştirir. */
+    val isConnected: StateFlow<Boolean> =
+            repository.connectionEvents.stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
     // Sync/reconnect telafisi için: gördüğümüz en büyük sunucu id'si
     private var lastReceivedId: Long = 0

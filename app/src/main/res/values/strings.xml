@@ -46,6 +46,18 @@
     </plurals>
     <string name="same_spot_hint">Ayrıntı için birine dokun.</string>
 
+    <!-- Sohbetler -->
+    <string name="chats_empty_title">Henüz sohbetin yok</string>
+    <string name="chats_empty_body">Bir talebe “Bende var” dediğinde ya da biri senin talebine teklif verdiğinde sohbet burada başlar.</string>
+    <string name="chats_load_failed">Sohbetler yüklenemedi</string>
+    <string name="chats_you_prefix">Sen: %1$s</string>
+    <string name="chat_input_placeholder">Mesaj yaz…</string>
+    <string name="chat_send">Gönder</string>
+    <string name="chat_sending">gönderiliyor…</string>
+    <string name="chat_failed">gönderilemedi, dokunup tekrar dene</string>
+    <string name="chat_retry">Tekrar gönder</string>
+    <string name="chat_empty">İlk mesajı yaz; ne zaman, nerede buluşacağınızı konuşun.</string>
+
     <!-- Talep açma -->
     <string name="create_request">Talep aç</string>
     <string name="create_request_title">Yeni talep</string>
