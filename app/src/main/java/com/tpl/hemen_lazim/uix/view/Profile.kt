@@ -75,7 +75,9 @@ fun Profile(navController: NavController) {
                         SharedPreferencesProvider.clearSession() // zaman aşımında da token kalmasın
                         Toast.makeText(context, "Çıkış yapıldı", Toast.LENGTH_SHORT).show()
                         navController.navigate("Auth") {
-                            popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                            // Tüm yığın: oturum girişte açıldıysa başlangıç hedefi zaten yığında
+                            // değil ve geri tuşu çıkış yapılmış hesabın ekranlarına dönerdi
+                            popUpTo(navController.graph.id) { inclusive = true }
                             launchSingleTop = true
                         }
                     }

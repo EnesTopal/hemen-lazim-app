@@ -3,6 +3,7 @@ package com.tpl.hemen_lazim.network
 import com.tpl.hemen_lazim.model.DTOs.ApiResponse
 import com.tpl.hemen_lazim.model.DTOs.RefreshRequest
 import com.tpl.hemen_lazim.model.DTOs.TokenResponse
+import com.tpl.hemen_lazim.session.SessionEvents
 import com.tpl.hemen_lazim.utils.SharedPreferencesProvider
 import okhttp3.Authenticator
 import okhttp3.OkHttpClient
@@ -79,6 +80,7 @@ class TokenAuthenticator(
                 if (body?.accessToken.isNullOrBlank() || body?.refreshToken.isNullOrBlank()) {
                     // Geçersiz dönüş → session’ı temizle
                     SharedPreferencesProvider.clearSession()
+                    SessionEvents.notifyExpired()
                     return@withLock null
                 }
 
@@ -90,9 +92,16 @@ class TokenAuthenticator(
 
                 // Orijinal isteği yeni access ile yeniden gönder
                 return@withLock newRequestWithAccess(response.request, body.accessToken)
-            } else {
-                // Refresh başarısız → session’ı temizle, 401 üst katmana gitsin
+            } else if (res != null && res.code() in REFRESH_REJECTED_CODES) {
+                // Sunucu refresh token'ı reddetti (süresi dolmuş, iptal edilmiş, bulunamadı) →
+                // session’ı temizle, 401 üst katmana gitsin. Kök ekran SessionEvents'i dinleyip
+                // kullanıcıyı mesajla girişe götürür.
                 SharedPreferencesProvider.clearSession()
+                SessionEvents.notifyExpired()
+                return@withLock null
+            } else {
+                // Ağ hatası ya da sunucu hatası (5xx): oturum geçersiz değil, yalnızca şu an
+                // yenilenemedi; kullanıcıya çıkış yaptırma
                 return@withLock null
             }
         }
@@ -103,6 +112,11 @@ class TokenAuthenticator(
             .removeHeader("Authorization")
             .addHeader("Authorization", "Bearer $access")
             .build()
+    }
+
+    private companion object {
+        // Sunucu: süresi dolmuş/bulunamadı 401, iptal edilmiş (başka cihazda döndürülmüş) 409
+        val REFRESH_REJECTED_CODES = setOf(400, 401, 403, 409)
     }
 
     private fun responseCount(response: Response): Int {

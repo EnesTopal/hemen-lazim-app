@@ -14,8 +14,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class AuthViewModel(
-    private val repo: AuthRepository = AuthRepository(),
-    private val context: Context? = null
+    private val repo: AuthRepository = AuthRepository()
 ) : ViewModel() {
 
     private val _ui = MutableStateFlow(AuthUiState())
@@ -40,7 +39,15 @@ class AuthViewModel(
 
     fun clearToast() = _ui.update { it.copy(toastMessage = null) }
 
-    fun submit(onLoginSuccessNavigate: () -> Unit, onRegisterSwitchedToLogin: () -> Unit) {
+    /**
+     * [appContext] yalnızca girişten sonra FCM kaydı için; ViewModel Context tutmuyor (ekran dönünce
+     * eski Activity'yi sızdırırdı), uygulama context'i çağrıda veriliyor.
+     */
+    fun submit(
+        appContext: Context,
+        onLoginSuccessNavigate: () -> Unit,
+        onRegisterSwitchedToLogin: () -> Unit
+    ) {
         val s = _ui.value
 
         val emailErr = if (s.isLogin) null else AuthValidator.validateEmail(s.email)
@@ -67,7 +74,7 @@ class AuthViewModel(
             _ui.update { it.copy(isLoading = true, toastMessage = null, formError = null) }
 
             if (s.isLogin) {
-                val res = repo.login(CreateUserDTO(s.username, s.password), context)
+                val res = repo.login(CreateUserDTO(s.username, s.password), appContext)
                 if (res.isSuccess) {
                     _ui.update { it.copy(isLoading = false) }
                     onLoginSuccessNavigate()

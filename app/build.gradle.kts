@@ -73,7 +73,8 @@ dependencies {
     implementation("io.reactivex.rxjava2:rxandroid:2.1.1")
     implementation("io.reactivex.rxjava2:rxjava:2.2.21")
 
-//    implementation("androidx.core:core-splashscreen:1.0.1")
+    // Android 12 açılış ekranı API'si (eski sürümlerde de aynı görünüm)
+    implementation("androidx.core:core-splashscreen:1.0.1")
     implementation("androidx.media:media:1.7.1")
     
     // Location and Maps dependencies

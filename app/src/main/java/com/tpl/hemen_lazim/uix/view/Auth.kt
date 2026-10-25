@@ -21,7 +21,7 @@ fun Auth(
     DoubleBackToExit()
 
     val context = LocalContext.current
-    val vm: AuthViewModel = remember { AuthViewModel(context = context) }
+    val vm: AuthViewModel = viewModel()
     val ui by vm.ui.collectAsState()
 
     LaunchedEffect(ui.toastMessage) {
@@ -61,6 +61,7 @@ fun Auth(
                 onEmailChange = vm::onEmailChange,
                 onSubmit = {
                     vm.submit(
+                        appContext = context.applicationContext,
                         onLoginSuccessNavigate = {
                             navController.navigate("MaterialRequest") {
                                 popUpTo("Auth") { inclusive = true }

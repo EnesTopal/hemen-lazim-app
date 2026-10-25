@@ -11,11 +11,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.google.android.gms.maps.model.LatLng
-import com.tpl.hemen_lazim.network.RetrofitClient
-import com.tpl.hemen_lazim.network.repositories.RequestRepository
-import com.tpl.hemen_lazim.network.services.RequestService
 import com.tpl.hemen_lazim.uix.innerview.CreateForm
 import com.tpl.hemen_lazim.uix.innerview.RadiusSlider
 import com.tpl.hemen_lazim.uix.innerview.RequestDetailDialog
@@ -42,13 +40,11 @@ fun MaterialRequest(navController: NavController) {
         // Kart içindeki haritaya dokunulduğu sürece sayfa kaymasın: dikey sürükleme haritaya gitsin
         var mapTouched by remember { mutableStateOf(false) }
 
-        val api = remember { RetrofitClient.retrofit.create(RequestService::class.java) }
-        val repo = remember { RequestRepository(api) }
-        val vm = remember { MaterialRequestCreateViewModel(repo) }
+        // Nav girdisine bağlı: ekran dönünce durum kaybolmaz, ekrandan çıkınca korutinler biter
+        val vm: MaterialRequestCreateViewModel = viewModel()
         val ui by vm.ui.collectAsState()
 
-        // Respond tab ViewModel
-        val respondVm = remember { RespondViewModel(repo) }
+        val respondVm: RespondViewModel = viewModel()
         val respondUi by respondVm.ui.collectAsState()
 
         LaunchedEffect(ui.toastMessage) {

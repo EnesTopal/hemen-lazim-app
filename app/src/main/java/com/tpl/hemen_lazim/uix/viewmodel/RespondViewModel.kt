@@ -29,7 +29,7 @@ data class RespondUiState(
 )
 
 class RespondViewModel(
-        private val repo: RequestRepository,
+        private val repo: RequestRepository = RequestRepository(),
         private val notificationRepo: NotificationRepository = NotificationRepository(),
         private val chatRepo: ChatRepository = ChatRepository()
 ) : ViewModel() {

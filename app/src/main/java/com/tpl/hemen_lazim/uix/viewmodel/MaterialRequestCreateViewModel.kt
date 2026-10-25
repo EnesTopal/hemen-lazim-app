@@ -15,7 +15,7 @@ import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 class MaterialRequestCreateViewModel(
-    private val repo: RequestRepository
+    private val repo: RequestRepository = RequestRepository()
 ) : ViewModel() {
 
     private val _ui = MutableStateFlow(MaterialFormState())
