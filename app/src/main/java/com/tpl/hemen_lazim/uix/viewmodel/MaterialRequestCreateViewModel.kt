@@ -14,6 +14,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
+private const val MAX_QUANTITY = 9999
+private const val MAX_QUANTITY_DIGITS = 4
+
 class MaterialRequestCreateViewModel(
     private val repo: RequestRepository = RequestRepository()
 ) : ViewModel() {
@@ -24,7 +27,20 @@ class MaterialRequestCreateViewModel(
     fun onTitle(v: String) = _ui.update { it.copy(title = v, titleError = null) }
     fun onDescription(v: String) = _ui.update { it.copy(description = v) }
     fun onCategory(v: Category) = _ui.update { it.copy(category = v, categoryError = null) }
-    fun onQuantity(v: String) = _ui.update { it.copy(quantity = v, quantityError = null) }
+    // Yalnızca rakam, en fazla 4 hane
+    fun onQuantity(v: String) {
+        val digits = v.filter(Char::isDigit).take(MAX_QUANTITY_DIGITS)
+        _ui.update { it.copy(quantity = digits, quantityError = null) }
+    }
+
+    fun incrementQuantity() = stepQuantity(+1)
+    fun decrementQuantity() = stepQuantity(-1)
+
+    private fun stepQuantity(delta: Int) = _ui.update {
+        val current = it.quantity.toIntOrNull() ?: 0
+        val next = (current + delta).coerceIn(1, MAX_QUANTITY)
+        it.copy(quantity = next.toString(), quantityError = null)
+    }
     fun onUnit(v: Units) = _ui.update { it.copy(units = v, unitError = null) }
     fun onLat(v: String) = _ui.update { it.copy(latitude = v, latError = null) }
     fun onLon(v: String) = _ui.update { it.copy(longitude = v, lonError = null) }

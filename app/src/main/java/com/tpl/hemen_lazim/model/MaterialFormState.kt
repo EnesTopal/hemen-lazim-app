@@ -7,7 +7,8 @@ data class MaterialFormState(
     val title: String = "",
     val description: String = "",
     val category: Category? = null,
-    val quantity: String = "",
+    // Çoğu talepte bir miktar var; − / + ile değişir, istenirse silinip boş bırakılabilir
+    val quantity: String = "1",
     val units: Units = Units.PARCA,
     val latitude: String = "",
     val longitude: String = "",

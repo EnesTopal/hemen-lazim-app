@@ -12,6 +12,7 @@ object SharedPreferencesProvider {
     private const val ACCESS_TOKEN_KEY = "access_token"
     private const val REFRESH_TOKEN_KEY = "refresh_token"
     private const val FCM_TOKEN_KEY = "fcm_token"
+    private const val NOTIFICATION_PROMPT_SHOWN_KEY = "notification_prompt_shown"
 
     fun init(context: Context) {
         if (sharedPreferences == null) {
@@ -50,6 +51,12 @@ object SharedPreferencesProvider {
             sharedPreferences?.edit()?.putString(FCM_TOKEN_KEY, token)?.apply()
     fun getFcmToken(): String? = sharedPreferences?.getString(FCM_TOKEN_KEY, null)
     fun clearFcmToken() = sharedPreferences?.edit()?.remove(FCM_TOKEN_KEY)?.apply()
+
+    // "Teklif gelince haber verelim mi?" bir kez sorulur; sonrası Profil > Bildirim ayarları
+    fun wasNotificationPromptShown(): Boolean =
+            sharedPreferences?.getBoolean(NOTIFICATION_PROMPT_SHOWN_KEY, false) ?: false
+    fun markNotificationPromptShown() =
+            sharedPreferences?.edit()?.putBoolean(NOTIFICATION_PROMPT_SHOWN_KEY, true)?.apply()
 
     fun accessTokenExpSeconds(): Long? = getAccessToken()?.let { getTokenExpirationTime(it) }
 

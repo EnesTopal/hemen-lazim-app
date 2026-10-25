@@ -39,6 +39,25 @@
     <string name="create_request">Talep aç</string>
     <string name="create_request_title">Yeni talep</string>
     <string name="publish">Yayınla</string>
+    <string name="form_section_what">Ne lazım?</string>
+    <string name="form_section_where">Nerede?</string>
+    <string name="form_section_how_long">Ne kadar süre?</string>
+    <string name="form_title_label">Başlık</string>
+    <string name="form_title_placeholder">Örn. 2 kg un, priz adaptörü</string>
+    <string name="form_category">Kategori</string>
+    <string name="form_quantity">Miktar</string>
+    <string name="form_quantity_decrease">Miktarı azalt</string>
+    <string name="form_quantity_increase">Miktarı artır</string>
+    <string name="form_unit">Birim</string>
+    <string name="form_description_label">Açıklama (isteğe bağlı)</string>
+    <string name="form_visible_area">Talebin görüneceği alan</string>
+    <string name="form_counter">%1$d/%2$d</string>
+    <!-- Yayınla çubuğundaki özet: alan · süre · bitiş -->
+    <string name="form_summary">%1$s · %2$s · bitiş %3$s</string>
+    <string name="notification_prompt_title">Teklif gelince haber verelim mi?</string>
+    <string name="notification_prompt_body">Biri “Bende var” dediğinde bildirimle haber veririz. İzni sonra Profil\'den de açabilirsin.</string>
+    <string name="notification_prompt_allow">İzin ver</string>
+    <string name="notification_prompt_later">Şimdi değil</string>
 
     <!-- İlanlarım -->
     <string name="my_requests_empty_title">Henüz talebin yok</string>

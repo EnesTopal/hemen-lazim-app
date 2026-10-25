@@ -1,128 +1,241 @@
 package com.tpl.hemen_lazim.uix.innerview
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.google.android.gms.maps.model.LatLng
+import com.tpl.hemen_lazim.R
 import com.tpl.hemen_lazim.model.MaterialFormState
 import com.tpl.hemen_lazim.model.enums.Category
 import com.tpl.hemen_lazim.model.enums.Units
 import com.tpl.hemen_lazim.model.enums.toDisplayName
+import com.tpl.hemen_lazim.model.enums.toEmoji
+import com.tpl.hemen_lazim.ui.theme.Spacing
 import com.tpl.hemen_lazim.uix.viewmodel.MaterialRequestCreateViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
+// Sunucudaki MaterialRequestCreateDTO sınırları
+private const val TITLE_MAX = 120
+private const val DESCRIPTION_MAX = 1000
+
+/**
+ * Talep formu: üç numaralı kart. "Hemen lazım" anında hızlı doldurulsun diye tek sayfa;
+ * kategori ve birim çiplerle, miktar düğmelerle seçilir.
+ */
 @Composable
 fun CreateForm(
     ui: MaterialFormState,
     vm: MaterialRequestCreateViewModel,
     onMapTouchChange: (Boolean) -> Unit
 ) {
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.l)) {
+        FormSection(number = 1, title = stringResource(R.string.form_section_what)) {
+            WhatSection(ui, vm)
+        }
+        FormSection(number = 2, title = stringResource(R.string.form_section_where)) {
+            val selected = ui.latitude.toDoubleOrNull()?.let { lat ->
+                ui.longitude.toDoubleOrNull()?.let { lng -> LatLng(lat, lng) }
+            }
+            LocationMapComponent(
+                selected = selected,
+                radiusKm = ui.radiusKm,
+                onLocationSelected = { latitude, longitude -> vm.updateLocation(latitude, longitude) },
+                onMapTouchChange = onMapTouchChange,
+                modifier = Modifier.fillMaxWidth()
+            )
+            // Arama ekranıyla aynı kaydırıcı; eskiden metre cinsinden serbest metindi ve "2" yazan
+            // 2 km değil 2 m kaydediyordu
+            RadiusSlider(
+                title = stringResource(R.string.form_visible_area),
+                radiusKm = ui.radiusKm,
+                onRadiusChange = vm::onRadiusKm
+            )
+        }
+        FormSection(number = 3, title = stringResource(R.string.form_section_how_long)) {
+            DurationPicker(minutes = ui.durationMinutes, onMinutesChange = vm::onDuration)
+        }
+    }
+}
 
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun ColumnScope.WhatSection(ui: MaterialFormState, vm: MaterialRequestCreateViewModel) {
     OutlinedTextField(
         value = ui.title,
-        onValueChange = vm::onTitle,
-        label = { Text("Başlık *") },
+        onValueChange = { if (it.length <= TITLE_MAX) vm.onTitle(it) },
+        label = { Text(stringResource(R.string.form_title_label)) },
+        placeholder = { Text(stringResource(R.string.form_title_placeholder)) },
         isError = ui.titleError != null,
         supportingText = {
-            ui.titleError?.let {
-                Text(
-                    it,
-                    color = MaterialTheme.colorScheme.error
-                )
+            Row(Modifier.fillMaxWidth()) {
+                Text(ui.titleError ?: "", Modifier.weight(1f), color = MaterialTheme.colorScheme.error)
+                Text(stringResource(R.string.form_counter, ui.title.length, TITLE_MAX))
             }
         },
         singleLine = true,
+        keyboardOptions = KeyboardOptions(
+            capitalization = KeyboardCapitalization.Sentences,
+            imeAction = ImeAction.Next
+        ),
         modifier = Modifier.fillMaxWidth()
     )
-    Spacer(Modifier.height(10.dp))
+
+    FieldLabel(stringResource(R.string.form_category), error = ui.categoryError)
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(Spacing.s),
+        verticalArrangement = Arrangement.spacedBy(Spacing.xs)
+    ) {
+        Category.entries.forEach { category ->
+            FilterChip(
+                selected = ui.category == category,
+                onClick = { vm.onCategory(category) },
+                label = { Text("${category.toEmoji()} ${category.toDisplayName()}") }
+            )
+        }
+    }
+
+    FieldLabel(stringResource(R.string.form_quantity), error = ui.quantityError)
+    QuantityStepper(
+        value = ui.quantity,
+        onValueChange = vm::onQuantity,
+        onDecrease = vm::decrementQuantity,
+        onIncrease = vm::incrementQuantity
+    )
+
+    FieldLabel(stringResource(R.string.form_unit), error = ui.unitError)
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(Spacing.s),
+        verticalArrangement = Arrangement.spacedBy(Spacing.xs)
+    ) {
+        Units.entries.forEach { unit ->
+            FilterChip(
+                selected = ui.units == unit,
+                onClick = { vm.onUnit(unit) },
+                label = { Text(unit.toDisplayName()) }
+            )
+        }
+    }
 
     OutlinedTextField(
         value = ui.description,
-        onValueChange = vm::onDescription,
-        label = { Text("Açıklama") },
-        minLines = 3,
-        modifier = Modifier.fillMaxWidth()
-    )
-    Spacer(Modifier.height(10.dp))
-
-    EnumDropdown(
-        label = "Kategori *",
-        values = Category.entries.toTypedArray(),
-        selected = ui.category,
-        onSelect = { vm.onCategory(it) },
-        error = ui.categoryError,
-        itemLabel = { it.toDisplayName() }
-    )
-    Spacer(Modifier.height(10.dp))
-
-    OutlinedTextField(
-        value = ui.quantity,
-        onValueChange = vm::onQuantity,
-        label = { Text("Miktar") },
-        isError = ui.quantityError != null,
+        onValueChange = { if (it.length <= DESCRIPTION_MAX) vm.onDescription(it) },
+        label = { Text(stringResource(R.string.form_description_label)) },
+        minLines = 2,
         supportingText = {
-            ui.quantityError?.let {
+            // Sınıra yaklaşınca sayaç; boş açıklama sade dursun
+            if (ui.description.length > DESCRIPTION_MAX - 100) {
                 Text(
-                    it,
-                    color = MaterialTheme.colorScheme.error
+                    stringResource(R.string.form_counter, ui.description.length, DESCRIPTION_MAX),
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.End
                 )
             }
         },
-        singleLine = true,
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
         modifier = Modifier.fillMaxWidth()
-    )
-    Spacer(Modifier.height(10.dp))
-
-    EnumDropdown(
-        label = "Birim *",
-        values = Units.entries.toTypedArray(),
-        selected = ui.units,
-        onSelect = { vm.onUnit(it) },
-        error = ui.unitError,
-        itemLabel = { it.toDisplayName() }
-    )
-    Spacer(Modifier.height(10.dp))
-
-    // Location Map Component
-    val selected = ui.latitude.toDoubleOrNull()?.let { lat ->
-        ui.longitude.toDoubleOrNull()?.let { lng -> LatLng(lat, lng) }
-    }
-    LocationMapComponent(
-        selected = selected,
-        radiusKm = ui.radiusKm,
-        onLocationSelected = { latitude, longitude ->
-            vm.updateLocation(latitude, longitude)
-        },
-        onMapTouchChange = onMapTouchChange,
-        modifier = Modifier.fillMaxWidth()
-    )
-    Spacer(Modifier.height(10.dp))
-
-    // Arama ekranıyla aynı kaydırıcı; eskiden metre cinsinden serbest metindi ve "2" yazan
-    // 2 km değil 2 m kaydediyordu
-    RadiusSlider(
-        title = "Talebin görüneceği alan",
-        radiusKm = ui.radiusKm,
-        onRadiusChange = vm::onRadiusKm
-    )
-    Spacer(Modifier.height(10.dp))
-
-    // Eskiden "Bitiş (ISO8601)" serbest metniydi, sunucu ise saat sayısı bekliyordu
-    DurationPicker(
-        minutes = ui.durationMinutes,
-        onMinutesChange = vm::onDuration
     )
 }
 
+/** − [2] + : miktar düğmelerle değişir, ortadaki alana elle de yazılabilir. */
+@Composable
+private fun QuantityStepper(
+    value: String,
+    onValueChange: (String) -> Unit,
+    onDecrease: () -> Unit,
+    onIncrease: () -> Unit
+) {
+    val current = value.toIntOrNull()
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
+        FilledTonalIconButton(onClick = onDecrease, enabled = current == null || current > 1) {
+            Icon(Icons.Filled.Remove, contentDescription = stringResource(R.string.form_quantity_decrease))
+        }
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            singleLine = true,
+            textStyle = MaterialTheme.typography.titleMedium.copy(textAlign = TextAlign.Center),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
+            modifier = Modifier.width(88.dp)
+        )
+        FilledTonalIconButton(onClick = onIncrease) {
+            Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.form_quantity_increase))
+        }
+    }
+}
+
+@Composable
+private fun FieldLabel(text: String, error: String?) {
+    Column {
+        Text(text, style = MaterialTheme.typography.labelLarge)
+        if (error != null) {
+            Text(error, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+        }
+    }
+}
+
+/** Numaralı bölüm kartı: başlık okuyucular için "başlık" olarak işaretli. */
+@Composable
+private fun FormSection(number: Int, title: String, content: @Composable ColumnScope.() -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
+    ) {
+        Column(
+            modifier = Modifier.padding(Spacing.l),
+            verticalArrangement = Arrangement.spacedBy(Spacing.m)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Spacing.s),
+                modifier = Modifier.semantics(mergeDescendants = true) { heading() }
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(28.dp)
+                        .background(MaterialTheme.colorScheme.primary, CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        "$number",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                }
+                Text(title, style = MaterialTheme.typography.titleMedium)
+            }
+            content()
+        }
+    }
+}
