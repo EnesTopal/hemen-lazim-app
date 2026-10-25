@@ -8,7 +8,6 @@ import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -43,7 +42,7 @@ private fun AppBottomBar(navController: NavController, currentRoute: String) {
                     },
                     icon = {
                         if (route == "Chats" && hasUnread) {
-                            BadgedBox(badge = { Badge(containerColor = Color.Red) }) {
+                            BadgedBox(badge = { Badge() }) {
                                 Icon(icon, contentDescription = label)
                             }
                         } else {

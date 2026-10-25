@@ -11,7 +11,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -182,8 +181,7 @@ fun FormErrorBar(message: String?) {
             text = message ?: "",
             modifier = Modifier.alpha(alpha),
             style = MaterialTheme.typography.bodyMedium,
-            color = Color(0xFFD32F2F)
-//            color = MaterialTheme.colorScheme.error
+            color = MaterialTheme.colorScheme.error
         )
     }
 }

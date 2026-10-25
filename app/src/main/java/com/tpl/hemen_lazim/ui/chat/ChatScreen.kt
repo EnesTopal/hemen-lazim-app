@@ -108,7 +108,7 @@ fun ChatScreen(
             modifier =
                     Modifier.fillMaxSize()
                             .padding(scaffoldPadding)
-                            .background(Color(0xFFF5F5F5))
+                            .background(MaterialTheme.colorScheme.surfaceContainerLow)
     ) {
         LazyColumn(
                 state = listState,
@@ -139,7 +139,10 @@ fun ChatScreen(
                 modifier =
                         Modifier.fillMaxWidth()
                                 .padding(8.dp)
-                                .background(Color.White, RoundedCornerShape(24.dp))
+                                .background(
+                                        MaterialTheme.colorScheme.surfaceContainerHighest,
+                                        RoundedCornerShape(24.dp)
+                                )
                                 .padding(horizontal = 8.dp, vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
         ) {
@@ -158,7 +161,7 @@ fun ChatScreen(
                                             color =
                                                     if (inputText.length == MAX_MESSAGE_LENGTH)
                                                             MaterialTheme.colorScheme.error
-                                                    else Color.Gray
+                                                    else MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                             } else null,
@@ -205,7 +208,7 @@ fun MessageItem(message: Message, isOwnMessage: Boolean, onRetry: () -> Unit) {
                     Icon(
                             imageVector = Icons.Default.Refresh,
                             contentDescription = "Tekrar gönder",
-                            tint = Color.Red
+                            tint = MaterialTheme.colorScheme.error
                     )
                 }
                 Spacer(modifier = Modifier.width(4.dp))
@@ -223,9 +226,9 @@ fun MessageItem(message: Message, isOwnMessage: Boolean, onRetry: () -> Unit) {
                             CardDefaults.cardColors(
                                     containerColor =
                                             when {
-                                                isFailed -> Color(0xFFFFCDD2)
+                                                isFailed -> MaterialTheme.colorScheme.errorContainer
                                                 isOwnMessage -> MaterialTheme.colorScheme.primary
-                                                else -> Color.White
+                                                else -> MaterialTheme.colorScheme.surfaceContainerHighest
                                             }
                             ),
                     modifier = Modifier.widthIn(max = 280.dp)
@@ -233,7 +236,12 @@ fun MessageItem(message: Message, isOwnMessage: Boolean, onRetry: () -> Unit) {
                 Text(
                         text = message.content,
                         modifier = Modifier.padding(12.dp),
-                        color = if (isOwnMessage && !isFailed) Color.White else Color.Black
+                        color =
+                                when {
+                                    isFailed -> MaterialTheme.colorScheme.onErrorContainer
+                                    isOwnMessage -> MaterialTheme.colorScheme.onPrimary
+                                    else -> MaterialTheme.colorScheme.onSurface
+                                }
                 )
             }
         }
@@ -242,14 +250,14 @@ fun MessageItem(message: Message, isOwnMessage: Boolean, onRetry: () -> Unit) {
             Text(
                     text = "gönderiliyor...",
                     style = MaterialTheme.typography.labelSmall,
-                    color = Color.Gray,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = 2.dp, end = 4.dp)
             )
         } else if (isFailed) {
             Text(
                     text = "gönderilemedi, tekrar dene",
                     style = MaterialTheme.typography.labelSmall,
-                    color = Color.Red,
+                    color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.padding(top = 2.dp, end = 4.dp)
             )
         }
