@@ -21,15 +21,18 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.tpl.hemen_lazim.R
+import com.tpl.hemen_lazim.navigation.Routes
 import com.tpl.hemen_lazim.network.repositories.AuthRepository
 import com.tpl.hemen_lazim.ui.LocalAppSnackbar
 import com.tpl.hemen_lazim.ui.theme.Spacing
 import com.tpl.hemen_lazim.uix.innerview.Avatar
+import com.tpl.hemen_lazim.uix.preview.PreviewData
+import com.tpl.hemen_lazim.uix.preview.PreviewScreen
+import com.tpl.hemen_lazim.uix.preview.ScreenPreviews
 import com.tpl.hemen_lazim.utils.SharedPreferencesProvider
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Profile(
     onOpenMyRequests: () -> Unit,
@@ -42,6 +45,38 @@ fun Profile(
     val authRepo = remember { AuthRepository() }
     val scope = rememberCoroutineScope()
     var isLoggingOut by remember { mutableStateOf(false) }
+
+    ProfileContent(
+        userName = userName,
+        version = version,
+        isLoggingOut = isLoggingOut,
+        onOpenMyRequests = onOpenMyRequests,
+        // İzin sistem ayarında: "Şimdi değil" diyen ya da reddeden buradan açabilir
+        onOpenNotificationSettings = { context.startActivity(notificationSettingsIntent(context)) },
+        onLogout = {
+            isLoggingOut = true
+            scope.launch {
+                // Sunucu çağrıları (cihaz kaydı, refresh token iptali) en fazla birkaç
+                // saniye beklenir; ağ yoksa da çıkış tamamlanır.
+                withTimeoutOrNull(LOGOUT_TIMEOUT_MS) { authRepo.logout() }
+                SharedPreferencesProvider.clearSession() // zaman aşımında da token kalmasın
+                snackbar.show("Çıkış yapıldı")
+                onLoggedOut()
+            }
+        }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ProfileContent(
+    userName: String,
+    version: String?,
+    isLoggingOut: Boolean,
+    onOpenMyRequests: () -> Unit,
+    onOpenNotificationSettings: () -> Unit,
+    onLogout: () -> Unit
+) {
     var confirmLogout by remember { mutableStateOf(false) }
 
     Scaffold(topBar = { CenterAlignedTopAppBar(title = { Text(stringResource(R.string.tab_profile)) }) }) {
@@ -74,8 +109,7 @@ fun Profile(
                 icon = Icons.Outlined.NotificationsActive,
                 title = stringResource(R.string.profile_notifications),
                 subtitle = stringResource(R.string.profile_notifications_hint),
-                // İzin sistem ayarında: "Şimdi değil" diyen ya da reddeden buradan açabilir
-                onClick = { context.startActivity(notificationSettingsIntent(context)) }
+                onClick = onOpenNotificationSettings
             )
             HorizontalDivider()
             ListItem(
@@ -115,15 +149,7 @@ fun Profile(
             confirmButton = {
                 TextButton(onClick = {
                     confirmLogout = false
-                    isLoggingOut = true
-                    scope.launch {
-                        // Sunucu çağrıları (cihaz kaydı, refresh token iptali) en fazla birkaç
-                        // saniye beklenir; ağ yoksa da çıkış tamamlanır.
-                        withTimeoutOrNull(LOGOUT_TIMEOUT_MS) { authRepo.logout() }
-                        SharedPreferencesProvider.clearSession() // zaman aşımında da token kalmasın
-                        snackbar.show("Çıkış yapıldı")
-                        onLoggedOut()
-                    }
+                    onLogout()
                 }) { Text(stringResource(R.string.profile_logout)) }
             },
             dismissButton = {
@@ -152,3 +178,18 @@ private fun appVersion(context: Context): String? =
     runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull()
 
 private const val LOGOUT_TIMEOUT_MS = 5000L
+
+@ScreenPreviews
+@Composable
+internal fun ProfilePreview() {
+    PreviewScreen(tab = Routes.PROFILE) {
+        ProfileContent(
+            userName = PreviewData.USER_NAME,
+            version = "1.0",
+            isLoggingOut = false,
+            onOpenMyRequests = {},
+            onOpenNotificationSettings = {},
+            onLogout = {}
+        )
+    }
+}

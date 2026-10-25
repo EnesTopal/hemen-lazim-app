@@ -8,6 +8,7 @@ import com.tpl.hemen_lazim.model.enums.Category
 import com.tpl.hemen_lazim.model.DTOs.MaterialRequestCreateDTO
 import com.tpl.hemen_lazim.model.MaterialFormState
 import com.tpl.hemen_lazim.model.enums.Units
+import com.tpl.hemen_lazim.uix.innerview.CreateFormActions
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -19,34 +20,34 @@ private const val MAX_QUANTITY_DIGITS = 4
 
 class MaterialRequestCreateViewModel(
     private val repo: RequestRepository = RequestRepository()
-) : ViewModel() {
+) : ViewModel(), CreateFormActions {
 
     private val _ui = MutableStateFlow(MaterialFormState())
     val ui = _ui.asStateFlow()
 
-    fun onTitle(v: String) = _ui.update { it.copy(title = v, titleError = null) }
-    fun onDescription(v: String) = _ui.update { it.copy(description = v) }
-    fun onCategory(v: Category) = _ui.update { it.copy(category = v, categoryError = null) }
+    override fun onTitle(v: String) = _ui.update { it.copy(title = v, titleError = null) }
+    override fun onDescription(v: String) = _ui.update { it.copy(description = v) }
+    override fun onCategory(v: Category) = _ui.update { it.copy(category = v, categoryError = null) }
     // Yalnızca rakam, en fazla 4 hane
-    fun onQuantity(v: String) {
+    override fun onQuantity(v: String) {
         val digits = v.filter(Char::isDigit).take(MAX_QUANTITY_DIGITS)
         _ui.update { it.copy(quantity = digits, quantityError = null) }
     }
 
-    fun incrementQuantity() = stepQuantity(+1)
-    fun decrementQuantity() = stepQuantity(-1)
+    override fun incrementQuantity() = stepQuantity(+1)
+    override fun decrementQuantity() = stepQuantity(-1)
 
     private fun stepQuantity(delta: Int) = _ui.update {
         val current = it.quantity.toIntOrNull() ?: 0
         val next = (current + delta).coerceIn(1, MAX_QUANTITY)
         it.copy(quantity = next.toString(), quantityError = null)
     }
-    fun onUnit(v: Units) = _ui.update { it.copy(units = v, unitError = null) }
+    override fun onUnit(v: Units) = _ui.update { it.copy(units = v, unitError = null) }
     fun onLat(v: String) = _ui.update { it.copy(latitude = v, latError = null) }
     fun onLon(v: String) = _ui.update { it.copy(longitude = v, lonError = null) }
     
     // GPS location update
-    fun updateLocation(latitude: Double, longitude: Double) {
+    override fun updateLocation(latitude: Double, longitude: Double) {
         _ui.update { 
             it.copy(
                 latitude = latitude.toString(),
@@ -56,8 +57,8 @@ class MaterialRequestCreateViewModel(
             )
         }
     }
-    fun onRadiusKm(v: Float) = _ui.update { it.copy(radiusKm = v) }
-    fun onDuration(minutes: Int) = _ui.update { it.copy(durationMinutes = minutes) }
+    override fun onRadiusKm(v: Float) = _ui.update { it.copy(radiusKm = v) }
+    override fun onDuration(minutes: Int) = _ui.update { it.copy(durationMinutes = minutes) }
     fun clearToast() = _ui.update { it.copy(toastMessage = null) }
 
     private fun validate(): Boolean {

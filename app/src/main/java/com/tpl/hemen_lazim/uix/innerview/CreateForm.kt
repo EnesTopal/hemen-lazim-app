@@ -44,11 +44,24 @@ import com.tpl.hemen_lazim.model.enums.Units
 import com.tpl.hemen_lazim.model.enums.toDisplayName
 import com.tpl.hemen_lazim.model.enums.toEmoji
 import com.tpl.hemen_lazim.ui.theme.Spacing
-import com.tpl.hemen_lazim.uix.viewmodel.MaterialRequestCreateViewModel
 
 // Sunucudaki MaterialRequestCreateDTO sınırları
 private const val TITLE_MAX = 120
 private const val DESCRIPTION_MAX = 1000
+
+/** Formdaki girdiler: ViewModel uygular, önizleme boş bir uygulama verir. */
+interface CreateFormActions {
+    fun onTitle(v: String)
+    fun onDescription(v: String)
+    fun onCategory(v: Category)
+    fun onQuantity(v: String)
+    fun incrementQuantity()
+    fun decrementQuantity()
+    fun onUnit(v: Units)
+    fun updateLocation(latitude: Double, longitude: Double)
+    fun onRadiusKm(v: Float)
+    fun onDuration(minutes: Int)
+}
 
 /**
  * Talep formu: üç numaralı kart. "Hemen lazım" anında hızlı doldurulsun diye tek sayfa;
@@ -57,12 +70,12 @@ private const val DESCRIPTION_MAX = 1000
 @Composable
 fun CreateForm(
     ui: MaterialFormState,
-    vm: MaterialRequestCreateViewModel,
+    actions: CreateFormActions,
     onMapTouchChange: (Boolean) -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.l)) {
         FormSection(number = 1, title = stringResource(R.string.form_section_what)) {
-            WhatSection(ui, vm)
+            WhatSection(ui, actions)
         }
         FormSection(number = 2, title = stringResource(R.string.form_section_where)) {
             val selected = ui.latitude.toDoubleOrNull()?.let { lat ->
@@ -71,7 +84,7 @@ fun CreateForm(
             LocationMapComponent(
                 selected = selected,
                 radiusKm = ui.radiusKm,
-                onLocationSelected = { latitude, longitude -> vm.updateLocation(latitude, longitude) },
+                onLocationSelected = actions::updateLocation,
                 onMapTouchChange = onMapTouchChange,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -80,21 +93,21 @@ fun CreateForm(
             RadiusSlider(
                 title = stringResource(R.string.form_visible_area),
                 radiusKm = ui.radiusKm,
-                onRadiusChange = vm::onRadiusKm
+                onRadiusChange = actions::onRadiusKm
             )
         }
         FormSection(number = 3, title = stringResource(R.string.form_section_how_long)) {
-            DurationPicker(minutes = ui.durationMinutes, onMinutesChange = vm::onDuration)
+            DurationPicker(minutes = ui.durationMinutes, onMinutesChange = actions::onDuration)
         }
     }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun ColumnScope.WhatSection(ui: MaterialFormState, vm: MaterialRequestCreateViewModel) {
+private fun ColumnScope.WhatSection(ui: MaterialFormState, actions: CreateFormActions) {
     OutlinedTextField(
         value = ui.title,
-        onValueChange = { if (it.length <= TITLE_MAX) vm.onTitle(it) },
+        onValueChange = { if (it.length <= TITLE_MAX) actions.onTitle(it) },
         label = { Text(stringResource(R.string.form_title_label)) },
         placeholder = { Text(stringResource(R.string.form_title_placeholder)) },
         isError = ui.titleError != null,
@@ -120,7 +133,7 @@ private fun ColumnScope.WhatSection(ui: MaterialFormState, vm: MaterialRequestCr
         Category.entries.forEach { category ->
             FilterChip(
                 selected = ui.category == category,
-                onClick = { vm.onCategory(category) },
+                onClick = { actions.onCategory(category) },
                 label = { Text("${category.toEmoji()} ${category.toDisplayName()}") }
             )
         }
@@ -129,9 +142,9 @@ private fun ColumnScope.WhatSection(ui: MaterialFormState, vm: MaterialRequestCr
     FieldLabel(stringResource(R.string.form_quantity), error = ui.quantityError)
     QuantityStepper(
         value = ui.quantity,
-        onValueChange = vm::onQuantity,
-        onDecrease = vm::decrementQuantity,
-        onIncrease = vm::incrementQuantity
+        onValueChange = actions::onQuantity,
+        onDecrease = actions::decrementQuantity,
+        onIncrease = actions::incrementQuantity
     )
 
     FieldLabel(stringResource(R.string.form_unit), error = ui.unitError)
@@ -142,7 +155,7 @@ private fun ColumnScope.WhatSection(ui: MaterialFormState, vm: MaterialRequestCr
         Units.entries.forEach { unit ->
             FilterChip(
                 selected = ui.units == unit,
-                onClick = { vm.onUnit(unit) },
+                onClick = { actions.onUnit(unit) },
                 label = { Text(unit.toDisplayName()) }
             )
         }
@@ -150,7 +163,7 @@ private fun ColumnScope.WhatSection(ui: MaterialFormState, vm: MaterialRequestCr
 
     OutlinedTextField(
         value = ui.description,
-        onValueChange = { if (it.length <= DESCRIPTION_MAX) vm.onDescription(it) },
+        onValueChange = { if (it.length <= DESCRIPTION_MAX) actions.onDescription(it) },
         label = { Text(stringResource(R.string.form_description_label)) },
         minLines = 2,
         supportingText = {

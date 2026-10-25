@@ -17,16 +17,13 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tpl.hemen_lazim.R
-import com.tpl.hemen_lazim.network.repositories.ChatUnreadStore
 
 enum class TopLevelTab(
     val route: String,
@@ -49,11 +46,9 @@ enum class TopLevelTab(
     }
 }
 
+/** [unreadTotal]: tüm sohbetlerdeki okunmamış mesaj sayısı, Sohbetler sekmesinde rozet olur. */
 @Composable
-fun AppBottomBar(currentRoute: String?, onTabSelected: (TopLevelTab) -> Unit) {
-    val unreadByRoom by ChatUnreadStore.unreadByRoom.collectAsStateWithLifecycle()
-    val unreadTotal = unreadByRoom.values.sum()
-
+fun AppBottomBar(currentRoute: String?, unreadTotal: Int, onTabSelected: (TopLevelTab) -> Unit) {
     NavigationBar {
         TopLevelTab.entries.forEach { tab ->
             val selected = currentRoute == tab.route

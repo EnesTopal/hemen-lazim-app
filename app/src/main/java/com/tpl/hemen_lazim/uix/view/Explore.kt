@@ -40,9 +40,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.google.android.gms.maps.model.LatLng
 import com.tpl.hemen_lazim.R
 import com.tpl.hemen_lazim.model.DTOs.MaterialRequestDTO
 import com.tpl.hemen_lazim.model.RequestLimits
+import com.tpl.hemen_lazim.navigation.Routes
 import com.tpl.hemen_lazim.ui.LocalAppSnackbar
 import com.tpl.hemen_lazim.ui.theme.Spacing
 import com.tpl.hemen_lazim.uix.innerview.CreateRequestFab
@@ -50,6 +52,9 @@ import com.tpl.hemen_lazim.uix.innerview.NearbyRequestCard
 import com.tpl.hemen_lazim.uix.innerview.RadiusSlider
 import com.tpl.hemen_lazim.uix.innerview.RequestDetailSheet
 import com.tpl.hemen_lazim.uix.innerview.RespondMapView
+import com.tpl.hemen_lazim.uix.preview.PreviewData
+import com.tpl.hemen_lazim.uix.preview.PreviewScreen
+import com.tpl.hemen_lazim.uix.preview.ScreenPreviews
 import com.tpl.hemen_lazim.uix.viewmodel.RespondUiState
 import com.tpl.hemen_lazim.uix.viewmodel.RespondViewModel
 import com.tpl.hemen_lazim.utils.SharedPreferencesProvider
@@ -58,7 +63,6 @@ import com.tpl.hemen_lazim.utils.SharedPreferencesProvider
  * Keşfet: çevredeki talepler haritada ve altında yakından uzağa liste. Buradan teklif verilir
  * ya da yeni talep açılır.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Explore(
     onCreateRequest: () -> Unit,
@@ -68,8 +72,6 @@ fun Explore(
     val ui by vm.ui.collectAsStateWithLifecycle()
     val snackbar = LocalAppSnackbar.current
     val missingRequester = stringResource(R.string.explore_missing_requester)
-    // Kart içindeki haritaya dokunulduğu sürece sayfa kaymasın: dikey sürükleme haritaya gitsin
-    var mapTouched by remember { mutableStateOf(false) }
 
     LaunchedEffect(ui.toastMessage) {
         ui.toastMessage?.let {
@@ -80,12 +82,60 @@ fun Explore(
     // Sekmeye dönünce sonuçlar tazelensin (konum biliniyorsa; bilinmiyorsa konum gelince aranır)
     LaunchedEffect(Unit) { vm.fetchNearbyRequests() }
 
+    ExploreContent(
+        ui = ui,
+        onRefresh = vm::fetchNearbyRequests,
+        onCreateRequest = onCreateRequest,
+        onLocationReceived = { latLng -> vm.setUserLocation(latLng.latitude, latLng.longitude) },
+        onSelectRequest = vm::selectRequest,
+        onRadiusChange = vm::setRadius,
+        onExpandRadius = vm::expandRadius,
+        onSupply = { request ->
+            val requesterId = request.requesterId
+            if (requesterId == null) {
+                snackbar.show(missingRequester)
+            } else {
+                vm.sendSupplyOfferNotification(
+                    requestId = request.id,
+                    requesterId = requesterId,
+                    onSuccess = {
+                        val me = SharedPreferencesProvider.getUserId()
+                        if (me != null) {
+                            vm.createChatRoom(me, requesterId) { roomId ->
+                                vm.selectRequest(null)
+                                onOpenChat(roomId, me, requesterId)
+                            }
+                        } else {
+                            vm.selectRequest(null)
+                        }
+                    }
+                )
+            }
+        }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ExploreContent(
+    ui: RespondUiState,
+    onRefresh: () -> Unit,
+    onCreateRequest: () -> Unit,
+    onLocationReceived: (LatLng) -> Unit,
+    onSelectRequest: (MaterialRequestDTO?) -> Unit,
+    onRadiusChange: (Float) -> Unit,
+    onExpandRadius: () -> Unit,
+    onSupply: (MaterialRequestDTO) -> Unit
+) {
+    // Kart içindeki haritaya dokunulduğu sürece sayfa kaymasın: dikey sürükleme haritaya gitsin
+    var mapTouched by remember { mutableStateOf(false) }
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text(stringResource(R.string.tab_explore)) },
                 actions = {
-                    IconButton(onClick = vm::fetchNearbyRequests, enabled = ui.userLatitude != null) {
+                    IconButton(onClick = onRefresh, enabled = ui.userLatitude != null) {
                         Icon(Icons.Filled.Refresh, contentDescription = stringResource(R.string.refresh))
                     }
                 }
@@ -105,25 +155,25 @@ fun Explore(
                 radiusKm = ui.radiusKm,
                 nearbyRequests = ui.nearbyRequests,
                 highlightedRequest = ui.highlightedRequest,
-                onLocationReceived = { latLng -> vm.setUserLocation(latLng.latitude, latLng.longitude) },
-                onRequestClick = { request -> vm.selectRequest(request) },
+                onLocationReceived = onLocationReceived,
+                onRequestClick = onSelectRequest,
                 onMapTouchChange = { mapTouched = it }
             )
 
             RadiusSlider(
                 title = stringResource(R.string.explore_search_area),
                 radiusKm = ui.radiusKm,
-                onRadiusChange = { vm.setRadius(it) },
-                onRadiusChangeFinished = { vm.fetchNearbyRequests() }
+                onRadiusChange = onRadiusChange,
+                onRadiusChangeFinished = onRefresh
             )
 
             // Konum bilinene kadar liste yok; harita kartı izin/konum durumunu zaten gösteriyor
             if (ui.userLatitude != null) {
                 Results(
                     ui = ui,
-                    onRequestClick = vm::selectRequest,
-                    onRetry = vm::fetchNearbyRequests,
-                    onExpand = vm::expandRadius
+                    onRequestClick = onSelectRequest,
+                    onRetry = onRefresh,
+                    onExpand = onExpandRadius
                 )
             }
 
@@ -135,29 +185,8 @@ fun Explore(
             RequestDetailSheet(
                 request = request,
                 isSending = ui.isSendingNotification,
-                onDismiss = { vm.selectRequest(null) },
-                onSupply = {
-                    val requesterId = request.requesterId
-                    if (requesterId == null) {
-                        snackbar.show(missingRequester)
-                        return@RequestDetailSheet
-                    }
-                    vm.sendSupplyOfferNotification(
-                        requestId = request.id,
-                        requesterId = requesterId,
-                        onSuccess = {
-                            val me = SharedPreferencesProvider.getUserId()
-                            if (me != null) {
-                                vm.createChatRoom(me, requesterId) { roomId ->
-                                    vm.selectRequest(null)
-                                    onOpenChat(roomId, me, requesterId)
-                                }
-                            } else {
-                                vm.selectRequest(null)
-                            }
-                        }
-                    )
-                }
+                onDismiss = { onSelectRequest(null) },
+                onSupply = { onSupply(request) }
             )
         }
     }
@@ -254,3 +283,20 @@ private fun StateMessage(
 }
 
 private val FAB_CLEARANCE = 72.dp
+
+@ScreenPreviews
+@Composable
+internal fun ExplorePreview() {
+    PreviewScreen(tab = Routes.EXPLORE) {
+        ExploreContent(
+            ui = PreviewData.explore,
+            onRefresh = {},
+            onCreateRequest = {},
+            onLocationReceived = {},
+            onSelectRequest = {},
+            onRadiusChange = {},
+            onExpandRadius = {},
+            onSupply = {}
+        )
+    }
+}

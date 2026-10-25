@@ -55,12 +55,17 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tpl.hemen_lazim.R
 import com.tpl.hemen_lazim.model.DTOs.MaterialRequestDTO
 import com.tpl.hemen_lazim.model.RequestLimits
+import com.tpl.hemen_lazim.navigation.Routes
 import com.tpl.hemen_lazim.ui.LocalAppSnackbar
 import com.tpl.hemen_lazim.ui.theme.Spacing
 import com.tpl.hemen_lazim.uix.innerview.CategoryBadge
 import com.tpl.hemen_lazim.uix.innerview.CreateRequestFab
 import com.tpl.hemen_lazim.uix.innerview.DurationPicker
 import com.tpl.hemen_lazim.uix.innerview.quantityAndCategory
+import com.tpl.hemen_lazim.uix.preview.PreviewData
+import com.tpl.hemen_lazim.uix.preview.PreviewScreen
+import com.tpl.hemen_lazim.uix.preview.ScreenPreviews
+import com.tpl.hemen_lazim.uix.viewmodel.MyRequestsUiState
 import com.tpl.hemen_lazim.uix.viewmodel.MyRequestsViewModel
 import com.tpl.hemen_lazim.utils.DisplayStatus
 import com.tpl.hemen_lazim.utils.displayStatus
@@ -72,7 +77,6 @@ import java.time.Duration
 import java.time.Instant
 
 /** Kullanıcının kendi talepleri: açıklar üstte (geri sayımlı, eylemli), geçmiş altta. */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyRequests(
     onCreateRequest: () -> Unit,
@@ -80,15 +84,6 @@ fun MyRequests(
 ) {
     val ui by vm.ui.collectAsStateWithLifecycle()
     val snackbar = LocalAppSnackbar.current
-    var cancelTarget by remember { mutableStateOf<MaterialRequestDTO?>(null) }
-    var extendTarget by remember { mutableStateOf<MaterialRequestDTO?>(null) }
-    // Kalan süreler dakikada bir güncellensin
-    val now by produceState(Instant.now()) {
-        while (true) {
-            delay(COUNTDOWN_TICK_MS)
-            value = Instant.now()
-        }
-    }
 
     // Sekmeye her girişte (ör. talep yayınlanıp buraya gelindiğinde) liste tazelenir
     LaunchedEffect(Unit) { vm.refresh() }
@@ -96,6 +91,36 @@ fun MyRequests(
         ui.message?.let {
             snackbar.show(it)
             vm.clearMessage()
+        }
+    }
+
+    MyRequestsContent(
+        ui = ui,
+        onRefresh = vm::refresh,
+        onCreateRequest = onCreateRequest,
+        onComplete = { id -> vm.complete(id) },
+        onCancel = { id -> vm.cancel(id) },
+        onExtend = vm::extend
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun MyRequestsContent(
+    ui: MyRequestsUiState,
+    onRefresh: () -> Unit,
+    onCreateRequest: () -> Unit,
+    onComplete: (id: String) -> Unit,
+    onCancel: (id: String) -> Unit,
+    onExtend: (id: String, minutes: Int) -> Unit
+) {
+    var cancelTarget by remember { mutableStateOf<MaterialRequestDTO?>(null) }
+    var extendTarget by remember { mutableStateOf<MaterialRequestDTO?>(null) }
+    // Kalan süreler dakikada bir güncellensin
+    val now by produceState(Instant.now()) {
+        while (true) {
+            delay(COUNTDOWN_TICK_MS)
+            value = Instant.now()
         }
     }
 
@@ -109,7 +134,7 @@ fun MyRequests(
     ) { padding ->
         PullToRefreshBox(
             isRefreshing = ui.isLoading && ui.requests.isNotEmpty(),
-            onRefresh = vm::refresh,
+            onRefresh = onRefresh,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
@@ -123,7 +148,7 @@ fun MyRequests(
                         title = stringResource(R.string.my_requests_load_failed),
                         body = ui.loadError,
                         action = stringResource(R.string.retry),
-                        onAction = vm::refresh
+                        onAction = onRefresh
                     )
 
                 ui.requests.isEmpty() ->
@@ -152,7 +177,7 @@ fun MyRequests(
                                 request = request,
                                 now = now,
                                 busy = request.id in ui.busyIds,
-                                onComplete = { vm.complete(request.id) },
+                                onComplete = { onComplete(request.id) },
                                 onCancel = { cancelTarget = request },
                                 onExtend = { extendTarget = request }
                             )
@@ -177,7 +202,7 @@ fun MyRequests(
             confirmButton = {
                 TextButton(onClick = {
                     cancelTarget = null
-                    vm.cancel(request.id)
+                    onCancel(request.id)
                 }) { Text(stringResource(R.string.cancel_confirm_yes)) }
             },
             dismissButton = {
@@ -192,7 +217,7 @@ fun MyRequests(
             onDismiss = { extendTarget = null },
             onConfirm = { minutes ->
                 extendTarget = null
-                vm.extend(request.id, minutes)
+                onExtend(request.id, minutes)
             }
         )
     }
@@ -380,3 +405,18 @@ fun CenteredMessage(
 
 private const val COUNTDOWN_TICK_MS = 60_000L
 private val FAB_CLEARANCE = 88.dp
+
+@ScreenPreviews
+@Composable
+internal fun MyRequestsPreview() {
+    PreviewScreen(tab = Routes.MY_REQUESTS) {
+        MyRequestsContent(
+            ui = PreviewData.myRequests,
+            onRefresh = {},
+            onCreateRequest = {},
+            onComplete = {},
+            onCancel = {},
+            onExtend = { _, _ -> }
+        )
+    }
+}

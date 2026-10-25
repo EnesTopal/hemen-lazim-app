@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -34,6 +35,9 @@ import com.tpl.hemen_lazim.model.MessageStatus
 import com.tpl.hemen_lazim.model.uiKey
 import com.tpl.hemen_lazim.ui.theme.Spacing
 import com.tpl.hemen_lazim.uix.innerview.Avatar
+import com.tpl.hemen_lazim.uix.preview.PreviewData
+import com.tpl.hemen_lazim.uix.preview.PreviewScreen
+import com.tpl.hemen_lazim.uix.preview.ScreenPreviews
 import com.tpl.hemen_lazim.utils.formatClock
 import com.tpl.hemen_lazim.utils.formatDayLabel
 import kotlinx.coroutines.delay
@@ -74,7 +78,6 @@ private fun buildRows(messages: List<Message>, zone: ZoneId = ZoneId.systemDefau
     return rows
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatScreen(
         navController: NavController,
@@ -90,7 +93,6 @@ fun ChatScreen(
     val otherUserName by viewModel.otherUserName.collectAsStateWithLifecycle()
     val rows = remember(messages) { buildRows(messages) }
     val listState = rememberLazyListState()
-    var inputText by remember { mutableStateOf("") }
 
     // Emniyet ağı: canlı teslimat WebSocket'e bağlı ve soket sessizce düşebiliyor. Ekran
     // öndeyken eksik mesaj var mı diye sorulur: soket kopukken 3 sn'de bir, bağlıyken 30 sn'de
@@ -129,6 +131,32 @@ fun ChatScreen(
         }
     }
 
+    ChatContent(
+            otherUserName = otherUserName,
+            rows = rows,
+            isLoadingMore = isLoadingMore,
+            userId = userId,
+            listState = listState,
+            onBack = { navController.popBackStack() },
+            onSend = viewModel::sendMessage,
+            onRetry = viewModel::retrySend
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ChatContent(
+        otherUserName: String,
+        rows: List<ChatRow>,
+        isLoadingMore: Boolean,
+        userId: String,
+        listState: LazyListState,
+        onBack: () -> Unit,
+        onSend: (String) -> Unit,
+        onRetry: (Message) -> Unit
+) {
+    var inputText by remember { mutableStateOf("") }
+
     Scaffold(
             // Alt kenar (gezinme çubuğu, klavye) mesaj kutusunda ele alınıyor
             contentWindowInsets = WindowInsets.statusBars,
@@ -148,7 +176,7 @@ fun ChatScreen(
                             }
                         },
                         navigationIcon = {
-                            IconButton(onClick = { navController.popBackStack() }) {
+                            IconButton(onClick = onBack) {
                                 Icon(
                                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                         contentDescription = stringResource(R.string.back)
@@ -197,7 +225,7 @@ fun ChatScreen(
                                     MessageItem(
                                             message = row.message,
                                             isOwnMessage = row.message.senderId == userId,
-                                            onRetry = { viewModel.retrySend(row.message) }
+                                            onRetry = { onRetry(row.message) }
                                     )
                         }
                     }
@@ -209,7 +237,7 @@ fun ChatScreen(
                     onTextChange = { if (it.length <= MAX_MESSAGE_LENGTH) inputText = it },
                     onSend = {
                         if (inputText.isNotBlank()) {
-                            viewModel.sendMessage(inputText)
+                            onSend(inputText)
                             inputText = ""
                         }
                     }
@@ -359,5 +387,22 @@ fun MessageItem(message: Message, isOwnMessage: Boolean, onRetry: () -> Unit) {
                     modifier = Modifier.padding(top = 2.dp, end = Spacing.xs)
             )
         }
+    }
+}
+
+@ScreenPreviews
+@Composable
+internal fun ChatPreview() {
+    PreviewScreen {
+        ChatContent(
+                otherUserName = PreviewData.CHAT_PARTNER,
+                rows = buildRows(PreviewData.chatMessages),
+                isLoadingMore = false,
+                userId = PreviewData.ME,
+                listState = rememberLazyListState(),
+                onBack = {},
+                onSend = {},
+                onRetry = {}
+        )
     }
 }

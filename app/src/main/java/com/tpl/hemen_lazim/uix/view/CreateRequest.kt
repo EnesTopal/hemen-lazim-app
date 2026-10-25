@@ -52,6 +52,10 @@ import com.tpl.hemen_lazim.model.MaterialFormState
 import com.tpl.hemen_lazim.ui.LocalAppSnackbar
 import com.tpl.hemen_lazim.ui.theme.Spacing
 import com.tpl.hemen_lazim.uix.innerview.CreateForm
+import com.tpl.hemen_lazim.uix.innerview.CreateFormActions
+import com.tpl.hemen_lazim.uix.preview.PreviewData
+import com.tpl.hemen_lazim.uix.preview.PreviewScreen
+import com.tpl.hemen_lazim.uix.preview.ScreenPreviews
 import com.tpl.hemen_lazim.uix.viewmodel.MaterialRequestCreateViewModel
 import com.tpl.hemen_lazim.utils.SharedPreferencesProvider
 import com.tpl.hemen_lazim.utils.formatDuration
@@ -62,7 +66,6 @@ import com.tpl.hemen_lazim.utils.formatRadiusKm
  * Tam ekran talep formu. Yayınlanınca kapanır ve İlanlarım açılır; ilk yayında bildirim izni
  * sorulur (açılışta değil: kullanıcı neden istendiğini ancak burada anlıyor).
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateRequest(
     onBack: () -> Unit,
@@ -73,7 +76,6 @@ fun CreateRequest(
     val context = LocalContext.current
     val snackbar = LocalAppSnackbar.current
     val currentOnPublished by rememberUpdatedState(onPublished)
-    var mapTouched by remember { mutableStateOf(false) }
     var askNotifications by remember { mutableStateOf(false) }
     val permissionLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { currentOnPublished() }
@@ -94,29 +96,7 @@ fun CreateRequest(
         }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.create_request_title)) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
-                    }
-                }
-            )
-        },
-        bottomBar = { PublishBar(ui = ui, onPublish = { vm.submit() }) }
-    ) { padding ->
-        Column(
-            Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(rememberScrollState(), enabled = !mapTouched)
-                .padding(Spacing.screen)
-        ) {
-            CreateForm(ui = ui, vm = vm, onMapTouchChange = { mapTouched = it })
-        }
-    }
+    CreateRequestContent(ui = ui, actions = vm, onBack = onBack, onPublish = { vm.submit() })
 
     if (askNotifications) {
         AlertDialog(
@@ -141,6 +121,41 @@ fun CreateRequest(
                 }) { Text(stringResource(R.string.notification_prompt_later)) }
             }
         )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CreateRequestContent(
+    ui: MaterialFormState,
+    actions: CreateFormActions,
+    onBack: () -> Unit,
+    onPublish: () -> Unit
+) {
+    var mapTouched by remember { mutableStateOf(false) }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(R.string.create_request_title)) },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
+                    }
+                }
+            )
+        },
+        bottomBar = { PublishBar(ui = ui, onPublish = onPublish) }
+    ) { padding ->
+        Column(
+            Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .verticalScroll(rememberScrollState(), enabled = !mapTouched)
+                .padding(Spacing.screen)
+        ) {
+            CreateForm(ui = ui, actions = actions, onMapTouchChange = { mapTouched = it })
+        }
     }
 }
 
@@ -190,3 +205,11 @@ private fun shouldAskForNotifications(context: Context): Boolean =
         ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) !=
         PackageManager.PERMISSION_GRANTED &&
         !SharedPreferencesProvider.wasNotificationPromptShown()
+
+@ScreenPreviews
+@Composable
+internal fun CreateRequestPreview() {
+    PreviewScreen {
+        CreateRequestContent(ui = PreviewData.createForm, actions = PreviewData.formActions, onBack = {}, onPublish = {})
+    }
+}

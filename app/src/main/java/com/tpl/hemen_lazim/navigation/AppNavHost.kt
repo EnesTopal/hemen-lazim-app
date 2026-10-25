@@ -16,6 +16,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -88,7 +89,10 @@ fun AppNavHost(
             contentWindowInsets = WindowInsets(0),
             bottomBar = {
                 if (showBottomBar) {
-                    AppBottomBar(currentRoute) { tab -> navController.navigateToTab(tab.route) }
+                    val unreadByRoom by ChatUnreadStore.unreadByRoom.collectAsStateWithLifecycle()
+                    AppBottomBar(currentRoute, unreadByRoom.values.sum()) { tab ->
+                        navController.navigateToTab(tab.route)
+                    }
                 }
             },
             snackbarHost = {

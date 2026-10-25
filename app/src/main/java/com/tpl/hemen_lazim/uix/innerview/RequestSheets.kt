@@ -38,6 +38,9 @@ import com.tpl.hemen_lazim.R
 import com.tpl.hemen_lazim.model.DTOs.MaterialRequestDTO
 import com.tpl.hemen_lazim.model.enums.toDisplayName
 import com.tpl.hemen_lazim.ui.theme.Spacing
+import com.tpl.hemen_lazim.uix.preview.ComponentPreviews
+import com.tpl.hemen_lazim.uix.preview.PreviewData
+import com.tpl.hemen_lazim.uix.preview.PreviewSurface
 import com.tpl.hemen_lazim.utils.formatDistance
 import com.tpl.hemen_lazim.utils.formatRemaining
 
@@ -45,7 +48,7 @@ import com.tpl.hemen_lazim.utils.formatRemaining
  * Talep ayrıntısı alt sayfada: harita ve liste arkada görünür kalır, tek elle kapatılır.
  * Ana eylem "Bende var, verebilirim": talep sahibine haber verir ve sohbeti açar.
  */
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RequestDetailSheet(
     request: MaterialRequestDTO,
@@ -57,93 +60,99 @@ fun RequestDetailSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = Spacing.xl)
-                .padding(bottom = Spacing.xl),
-            verticalArrangement = Arrangement.spacedBy(Spacing.l)
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.m)) {
-                CategoryBadge(request.category, size = 56.dp)
-                Column(Modifier.weight(1f)) {
-                    Text(request.title, style = MaterialTheme.typography.titleLarge)
-                    Text(
-                        request.category.toDisplayName(),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-            }
+        RequestDetailContent(request = request, isSending = isSending, onSupply = onSupply)
+    }
+}
 
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(Spacing.s),
-                verticalArrangement = Arrangement.spacedBy(Spacing.s)
-            ) {
-                request.quantity?.let { quantity ->
-                    InfoPill(Icons.Outlined.Inventory2, listOfNotNull("$quantity", request.units?.toDisplayName()).joinToString(" "))
-                }
-                request.distanceMeters?.let { meters ->
-                    InfoPill(Icons.Outlined.NearMe, stringResource(R.string.distance_away, formatDistance(meters)))
-                }
-                request.expiresAt?.let(::formatRemaining)?.let { remaining ->
-                    InfoPill(Icons.Outlined.Schedule, stringResource(R.string.time_left, remaining))
-                }
-            }
-
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    Icons.Outlined.PersonOutline,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(18.dp)
-                )
-                Spacer(Modifier.width(Spacing.s))
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun RequestDetailContent(request: MaterialRequestDTO, isSending: Boolean, onSupply: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = Spacing.xl)
+            .padding(bottom = Spacing.xl),
+        verticalArrangement = Arrangement.spacedBy(Spacing.l)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.m)) {
+            CategoryBadge(request.category, size = 56.dp)
+            Column(Modifier.weight(1f)) {
+                Text(request.title, style = MaterialTheme.typography.titleLarge)
                 Text(
-                    stringResource(
-                        R.string.request_requester,
-                        request.requesterName ?: stringResource(R.string.request_requester_unknown)
-                    ),
+                    request.category.toDisplayName(),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
+        }
 
-            if (!request.description.isNullOrBlank()) {
-                Surface(
-                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    shape = MaterialTheme.shapes.medium,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        request.description,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(Spacing.m)
-                    )
-                }
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(Spacing.s),
+            verticalArrangement = Arrangement.spacedBy(Spacing.s)
+        ) {
+            request.quantity?.let { quantity ->
+                InfoPill(Icons.Outlined.Inventory2, listOfNotNull("$quantity", request.units?.toDisplayName()).joinToString(" "))
             }
+            request.distanceMeters?.let { meters ->
+                InfoPill(Icons.Outlined.NearMe, stringResource(R.string.distance_away, formatDistance(meters)))
+            }
+            request.expiresAt?.let(::formatRemaining)?.let { remaining ->
+                InfoPill(Icons.Outlined.Schedule, stringResource(R.string.time_left, remaining))
+            }
+        }
 
-            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-                Button(
-                    onClick = onSupply,
-                    enabled = !isSending,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 52.dp)
-                ) {
-                    if (isSending) {
-                        CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
-                        Spacer(Modifier.width(Spacing.s))
-                    }
-                    Text(stringResource(R.string.request_supply))
-                }
-                Spacer(Modifier.size(Spacing.xs))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                Icons.Outlined.PersonOutline,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(18.dp)
+            )
+            Spacer(Modifier.width(Spacing.s))
+            Text(
+                stringResource(
+                    R.string.request_requester,
+                    request.requesterName ?: stringResource(R.string.request_requester_unknown)
+                ),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        if (!request.description.isNullOrBlank()) {
+            Surface(
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                shape = MaterialTheme.shapes.medium,
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 Text(
-                    stringResource(R.string.request_supply_hint),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    request.description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(Spacing.m)
                 )
             }
+        }
+
+        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+            Button(
+                onClick = onSupply,
+                enabled = !isSending,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 52.dp)
+            ) {
+                if (isSending) {
+                    CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
+                    Spacer(Modifier.width(Spacing.s))
+                }
+                Text(stringResource(R.string.request_supply))
+            }
+            Spacer(Modifier.size(Spacing.xs))
+            Text(
+                stringResource(R.string.request_supply_hint),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
@@ -197,5 +206,14 @@ private fun InfoPill(icon: ImageVector, text: String) {
             Spacer(Modifier.width(Spacing.xs))
             Text(text, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSecondaryContainer)
         }
+    }
+}
+
+// Alt sayfanın kendisi önizlemede açılmıyor; içeriği tek başına gösteriliyor
+@ComponentPreviews
+@Composable
+internal fun RequestDetailPreview() {
+    PreviewSurface {
+        RequestDetailContent(request = PreviewData.nearbyRequests.first(), isSending = false, onSupply = {})
     }
 }

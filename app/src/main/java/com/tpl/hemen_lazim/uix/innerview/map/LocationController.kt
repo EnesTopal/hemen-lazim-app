@@ -25,6 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.location.LocationManagerCompat
@@ -234,7 +235,9 @@ fun rememberLocationController(): LocationController {
     }
     SideEffect { controller.bind(permissionLauncher, settingsLauncher) }
 
-    LaunchedEffect(controller) { controller.refresh() }
+    // Önizlemede konum istenmez: izin diyaloğu açılamıyor (harita kartı yerine çizim koyuyor)
+    val inPreview = LocalInspectionMode.current
+    LaunchedEffect(controller) { if (!inPreview) controller.refresh() }
 
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner, controller) {

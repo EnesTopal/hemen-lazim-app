@@ -1,5 +1,6 @@
 package com.tpl.hemen_lazim.uix.innerview.map
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Arrangement
@@ -34,10 +35,14 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -93,6 +98,9 @@ fun HemenMapCard(
     placeholderAction: (@Composable () -> Unit)? = null,
     content: @Composable @GoogleMapComposable () -> Unit = {}
 ) {
+    // Android Studio önizlemesinde (ve ekran görüntüsü testlerinde) GoogleMap çizilmiyor, konum da
+    // istenmiyor: kart haritanın yerine sade bir çizimle, butonlarıyla birlikte görünür
+    val inPreview = LocalInspectionMode.current
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -100,7 +108,7 @@ fun HemenMapCard(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
-        if (showMap) {
+        if (showMap || inPreview) {
             MapContent(
                 location = location,
                 cameraPositionState = cameraPositionState,
@@ -112,6 +120,7 @@ fun HemenMapCard(
                 showCenterPin = showCenterPin,
                 onRecenter = onRecenter,
                 onMapClick = onMapClick,
+                inPreview = inPreview,
                 content = content
             )
         } else {
@@ -136,6 +145,7 @@ private fun MapContent(
     showCenterPin: Boolean,
     onRecenter: () -> Unit,
     onMapClick: (LatLng) -> Unit,
+    inPreview: Boolean,
     content: @Composable @GoogleMapComposable () -> Unit
 ) {
     val context = LocalContext.current
@@ -146,7 +156,7 @@ private fun MapContent(
     val fitPaddingPx = with(LocalDensity.current) { FIT_PADDING.roundToPx() }
     val circleColor = MaterialTheme.colorScheme.primary
     // İzin yokken mavi noktayı açmak SecurityException fırlatır
-    val showMyLocation = remember(location.status) { hasLocationPermission(context) }
+    val showMyLocation = remember(location.status) { !inPreview && hasLocationPermission(context) }
 
     LaunchedEffect(fitKey, mapLoaded) {
         if (!mapLoaded) return@LaunchedEffect
@@ -161,24 +171,28 @@ private fun MapContent(
             .fillMaxSize()
             .reportTouches { touched -> currentOnTouchChange(touched) }
     ) {
-        GoogleMap(
-            modifier = Modifier.fillMaxSize(),
-            cameraPositionState = cameraPositionState,
-            properties = MapProperties(isMyLocationEnabled = showMyLocation),
-            uiSettings = MAP_UI_SETTINGS,
-            onMapClick = onMapClick,
-            onMapLoaded = { mapLoaded = true }
-        ) {
-            circleCenter()?.let { center ->
-                Circle(
-                    center = center,
-                    radius = radiusMeters,
-                    strokeColor = circleColor,
-                    strokeWidth = 4f,
-                    fillColor = circleColor.copy(alpha = 0.15f)
-                )
+        if (inPreview) {
+            MapPreviewBackdrop(circleColor)
+        } else {
+            GoogleMap(
+                modifier = Modifier.fillMaxSize(),
+                cameraPositionState = cameraPositionState,
+                properties = MapProperties(isMyLocationEnabled = showMyLocation),
+                uiSettings = MAP_UI_SETTINGS,
+                onMapClick = onMapClick,
+                onMapLoaded = { mapLoaded = true }
+            ) {
+                circleCenter()?.let { center ->
+                    Circle(
+                        center = center,
+                        radius = radiusMeters,
+                        strokeColor = circleColor,
+                        strokeWidth = 4f,
+                        fillColor = circleColor.copy(alpha = 0.15f)
+                    )
+                }
+                content()
             }
-            content()
         }
 
         if (showCenterPin) {
@@ -200,12 +214,31 @@ private fun MapContent(
                 .align(Alignment.TopEnd)
                 .padding(8.dp)
         ) {
-            if (location.status == LocationStatus.Loading) {
+            if (location.status == LocationStatus.Loading && !inPreview) {
                 CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
             } else {
                 Icon(Icons.Filled.MyLocation, contentDescription = "Konumuma git")
             }
         }
+    }
+}
+
+/** Önizlemede haritanın yerine: birkaç sokak çizgisi ve haritadakiyle aynı renkte alan dairesi. */
+@Composable
+private fun MapPreviewBackdrop(circleColor: Color) {
+    // Koyu temada outlineVariant zeminle neredeyse aynı; yazı renginin soluğu iki temada da seçiliyor
+    val roadColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.12f)
+    Canvas(Modifier.fillMaxSize()) {
+        val road = 6.dp.toPx()
+        listOf(0.18f, 0.55f, 0.84f).forEach { y ->
+            drawLine(roadColor, Offset(0f, size.height * y), Offset(size.width, size.height * (y + 0.08f)), road)
+        }
+        listOf(0.22f, 0.68f).forEach { x ->
+            drawLine(roadColor, Offset(size.width * x, 0f), Offset(size.width * (x - 0.06f), size.height), road)
+        }
+        val radius = size.minDimension * 0.32f
+        drawCircle(circleColor.copy(alpha = 0.15f), radius)
+        drawCircle(circleColor, radius, style = Stroke(width = 4f))
     }
 }
 

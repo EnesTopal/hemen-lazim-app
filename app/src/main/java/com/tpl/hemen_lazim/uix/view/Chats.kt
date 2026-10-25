@@ -22,20 +22,42 @@ import com.tpl.hemen_lazim.navigation.Routes
 import com.tpl.hemen_lazim.network.repositories.ChatUnreadStore
 import com.tpl.hemen_lazim.ui.theme.Spacing
 import com.tpl.hemen_lazim.uix.innerview.Avatar
+import com.tpl.hemen_lazim.uix.preview.PreviewData
+import com.tpl.hemen_lazim.uix.preview.PreviewScreen
+import com.tpl.hemen_lazim.uix.preview.ScreenPreviews
+import com.tpl.hemen_lazim.uix.viewmodel.ChatsUiState
 import com.tpl.hemen_lazim.uix.viewmodel.ChatsViewModel
 import com.tpl.hemen_lazim.utils.formatChatListTime
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Chats(navController: NavController, viewModel: ChatsViewModel = viewModel()) {
     val ui by viewModel.ui.collectAsStateWithLifecycle()
     val unreadByRoom by ChatUnreadStore.unreadByRoom.collectAsStateWithLifecycle()
-    // Yalnızca kullanıcı aşağı çektiğinde gösterge; yeni mesajla gelen tazelemeler sessiz
-    var pulling by remember { mutableStateOf(false) }
-    LaunchedEffect(ui.isLoading) { if (!ui.isLoading) pulling = false }
 
     // Sekmeye her girişte tazele
     LaunchedEffect(Unit) { viewModel.refresh() }
+
+    ChatsContent(
+            ui = ui,
+            unreadByRoom = unreadByRoom,
+            onRefresh = viewModel::refresh,
+            onOpenChat = { roomId, otherUserId ->
+                navController.navigate(Routes.chat(roomId, ui.currentUserId, otherUserId))
+            }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ChatsContent(
+        ui: ChatsUiState,
+        unreadByRoom: Map<String, Int>,
+        onRefresh: () -> Unit,
+        onOpenChat: (roomId: String, otherUserId: String) -> Unit
+) {
+    // Yalnızca kullanıcı aşağı çektiğinde gösterge; yeni mesajla gelen tazelemeler sessiz
+    var pulling by remember { mutableStateOf(false) }
+    LaunchedEffect(ui.isLoading) { if (!ui.isLoading) pulling = false }
 
     Scaffold(topBar = { CenterAlignedTopAppBar(title = { Text(stringResource(R.string.tab_chats)) }) }) {
             padding ->
@@ -43,7 +65,7 @@ fun Chats(navController: NavController, viewModel: ChatsViewModel = viewModel())
                 isRefreshing = pulling,
                 onRefresh = {
                     pulling = true
-                    viewModel.refresh()
+                    onRefresh()
                 },
                 modifier = Modifier.fillMaxSize().padding(padding)
         ) {
@@ -57,7 +79,7 @@ fun Chats(navController: NavController, viewModel: ChatsViewModel = viewModel())
                                 title = stringResource(R.string.chats_load_failed),
                                 body = ui.error,
                                 action = stringResource(R.string.retry),
-                                onAction = viewModel::refresh
+                                onAction = onRefresh
                         )
                 ui.chats.isEmpty() ->
                         CenteredMessage(
@@ -80,11 +102,7 @@ fun Chats(navController: NavController, viewModel: ChatsViewModel = viewModel())
                                         isOwn = message.senderId == ui.currentUserId,
                                         otherUserName = ui.userNames[otherUserId],
                                         unread = unreadByRoom[message.roomId] ?: 0,
-                                        onClick = {
-                                            navController.navigate(
-                                                    Routes.chat(message.roomId, ui.currentUserId, otherUserId)
-                                            )
-                                        }
+                                        onClick = { onOpenChat(message.roomId, otherUserId) }
                                 )
                             }
                         }
@@ -143,4 +161,17 @@ private fun ChatItem(
                 }
             }
     )
+}
+
+@ScreenPreviews
+@Composable
+internal fun ChatsPreview() {
+    PreviewScreen(tab = Routes.CHATS) {
+        ChatsContent(
+                ui = PreviewData.chats,
+                unreadByRoom = PreviewData.unreadByRoom,
+                onRefresh = {},
+                onOpenChat = { _, _ -> }
+        )
+    }
 }

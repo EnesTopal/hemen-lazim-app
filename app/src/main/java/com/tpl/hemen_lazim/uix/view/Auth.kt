@@ -18,10 +18,14 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tpl.hemen_lazim.R
+import com.tpl.hemen_lazim.model.AuthUiState
 import com.tpl.hemen_lazim.ui.LocalAppSnackbar
 import com.tpl.hemen_lazim.ui.theme.BrandOrange
 import com.tpl.hemen_lazim.ui.theme.Spacing
 import com.tpl.hemen_lazim.uix.innerview.AuthBlock
+import com.tpl.hemen_lazim.uix.preview.PreviewData
+import com.tpl.hemen_lazim.uix.preview.PreviewScreen
+import com.tpl.hemen_lazim.uix.preview.ScreenPreviews
 import com.tpl.hemen_lazim.uix.viewmodel.AuthViewModel
 
 @Composable
@@ -38,6 +42,31 @@ fun Auth(onLoggedIn: () -> Unit) {
         }
     }
 
+    AuthContent(
+        ui = ui,
+        onModeChange = vm::setMode,
+        onUsernameChange = vm::onUsernameChange,
+        onPasswordChange = vm::onPasswordChange,
+        onEmailChange = vm::onEmailChange,
+        onSubmit = {
+            vm.submit(
+                appContext = context.applicationContext,
+                onLoginSuccessNavigate = onLoggedIn,
+                onRegisterSwitchedToLogin = {}
+            )
+        }
+    )
+}
+
+@Composable
+private fun AuthContent(
+    ui: AuthUiState,
+    onModeChange: (isLogin: Boolean) -> Unit,
+    onUsernameChange: (String) -> Unit,
+    onPasswordChange: (String) -> Unit,
+    onEmailChange: (String) -> Unit,
+    onSubmit: () -> Unit
+) {
     Scaffold { padding ->
         Column(
             modifier = Modifier
@@ -54,17 +83,11 @@ fun Auth(onLoggedIn: () -> Unit) {
             Spacer(Modifier.height(Spacing.xxl))
             AuthBlock(
                 ui = ui,
-                onModeChange = vm::setMode,
-                onUsernameChange = vm::onUsernameChange,
-                onPasswordChange = vm::onPasswordChange,
-                onEmailChange = vm::onEmailChange,
-                onSubmit = {
-                    vm.submit(
-                        appContext = context.applicationContext,
-                        onLoginSuccessNavigate = onLoggedIn,
-                        onRegisterSwitchedToLogin = {}
-                    )
-                }
+                onModeChange = onModeChange,
+                onUsernameChange = onUsernameChange,
+                onPasswordChange = onPasswordChange,
+                onEmailChange = onEmailChange,
+                onSubmit = onSubmit
             )
         }
     }
@@ -95,6 +118,21 @@ private fun BrandHeader() {
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center
+        )
+    }
+}
+
+@ScreenPreviews
+@Composable
+internal fun AuthPreview() {
+    PreviewScreen {
+        AuthContent(
+            ui = PreviewData.auth,
+            onModeChange = {},
+            onUsernameChange = {},
+            onPasswordChange = {},
+            onEmailChange = {},
+            onSubmit = {}
         )
     }
 }
