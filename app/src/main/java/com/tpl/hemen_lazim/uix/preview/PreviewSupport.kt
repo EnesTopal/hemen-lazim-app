@@ -13,18 +13,21 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.tpl.hemen_lazim.navigation.AppBottomBar
 import com.tpl.hemen_lazim.ui.theme.Hemen_lazimTheme
 
-/** Tam ekran önizleme: telefon boyutunda, açık ve koyu temada. */
-@Preview(name = "Açık tema", device = "spec:width=411dp,height=891dp")
+/** Tam ekran önizleme: telefon boyutunda; Türkçe açık ve koyu temada, bir de İngilizce. */
+@Preview(name = "Türkçe, açık tema", locale = "tr", device = "spec:width=411dp,height=891dp")
 @Preview(
-    name = "Koyu tema",
+    name = "Türkçe, koyu tema",
+    locale = "tr",
     device = "spec:width=411dp,height=891dp",
     uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL
 )
+@Preview(name = "İngilizce", locale = "en", device = "spec:width=411dp,height=891dp")
 annotation class ScreenPreviews
 
-/** Ekranın bir parçası (ör. alt sayfa içeriği): içeriği kadar, açık ve koyu temada. */
-@Preview(name = "Açık tema")
-@Preview(name = "Koyu tema", uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL)
+/** Ekranın bir parçası (ör. alt sayfa içeriği): içeriği kadar; Türkçe açık ve koyu temada, bir de İngilizce. */
+@Preview(name = "Türkçe, açık tema", locale = "tr")
+@Preview(name = "Türkçe, koyu tema", locale = "tr", uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL)
+@Preview(name = "İngilizce", locale = "en")
 annotation class ComponentPreviews
 
 /**

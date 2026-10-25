@@ -1,0 +1,271 @@
+<!-- Türkçe metinler. Varsayılan (desteklenmeyen dildeki telefonlar dahil) values/strings.xml: İngilizce.
+     Yeni metin her iki dosyaya da eklenmeli. -->
+<resources>
+    <!-- Bu dosyanın dili: sayı, saat ve tarih de bu dile göre yazılır (ui/TimeTexts.kt contentLocale) -->
+    <string name="content_locale">tr</string>
+
+    <!-- Genel -->
+    <string name="back">Geri</string>
+    <string name="retry">Tekrar dene</string>
+    <string name="refresh">Yenile</string>
+
+    <!-- Hatalar: sunucunun hata koduna göre (ui/ErrorMessages.kt); bilinmeyen kodda HTTP durumuna göre -->
+    <string name="error_network">Sunucuya ulaşılamadı. İnternet bağlantını kontrol edip tekrar dene.</string>
+    <string name="error_unknown">Bir şeyler ters gitti. Lütfen tekrar dene.</string>
+    <string name="error_server">Sunucuda bir sorun oluştu. Biraz sonra tekrar dene.</string>
+    <string name="error_request_failed">İstek işlenemedi. Lütfen tekrar dene.</string>
+    <string name="error_forbidden">Bu işlem için yetkin yok.</string>
+    <string name="error_not_found">Aradığın kayıt bulunamadı.</string>
+    <string name="error_conflict">Bu işlem şu an yapılamıyor. Sayfayı yenileyip tekrar dene.</string>
+    <string name="error_validation">Bazı bilgiler eksik ya da hatalı.</string>
+    <string name="error_request_not_found">Talep bulunamadı; silinmiş olabilir.</string>
+    <string name="error_request_not_open">Bu talep artık açık değil.</string>
+    <string name="error_not_request_owner">Bu talebi yalnızca sahibi değiştirebilir.</string>
+    <string name="error_offer_on_own_request">Kendi talebine teklif veremezsin.</string>
+    <string name="error_user_not_found">Kullanıcı bulunamadı.</string>
+    <string name="error_chat_with_self">Kendinle sohbet başlatamazsın.</string>
+    <string name="error_not_chat_member">Bu sohbete erişimin yok.</string>
+    <string name="error_message_empty">Boş mesaj gönderilemez.</string>
+    <string name="error_message_too_long">Mesaj çok uzun.</string>
+    <string name="error_invalid_credentials">Kullanıcı adı ya da şifre hatalı.</string>
+    <string name="error_account_disabled">Bu hesap devre dışı bırakılmış.</string>
+    <string name="error_account_locked">Bu hesap kilitlenmiş.</string>
+    <string name="error_authentication_failed">Giriş yapılamadı. Lütfen tekrar dene.</string>
+    <string name="error_username_invalid">Kullanıcı adı 3 ile 50 karakter arasında olmalı</string>
+    <string name="error_password_too_long">Şifre çok uzun</string>
+    <string name="error_username_taken">Bu kullanıcı adı alınmış</string>
+    <string name="error_email_taken">Bu e-posta zaten kayıtlı</string>
+    <string name="session_expired">Oturumun sona erdi, lütfen tekrar giriş yap.</string>
+
+    <!-- Kategori ve birim adları -->
+    <string name="category_food">Yemek</string>
+    <string name="category_groceries">Yemek Malzemesi</string>
+    <string name="category_hygiene">Hijyen</string>
+    <string name="category_cleaning">Temizlik</string>
+    <string name="category_clothing">Giyim</string>
+    <string name="category_cosmetics">Kozmetik</string>
+    <string name="category_electronics">Elektronik</string>
+    <string name="category_stationery">Kırtasiye</string>
+    <string name="category_other">Diğer</string>
+    <string name="unit_piece">Parça</string>
+    <string name="unit_item">Adet</string>
+    <string name="unit_pack">Paket</string>
+    <string name="unit_kg">Kg</string>
+    <string name="unit_litre">Litre</string>
+    <string name="unit_box">Kutu</string>
+    <string name="unit_other">Diğer</string>
+    <!-- Miktarla birlikte: "2 Paket" (İngilizcede çoğul çekiliyor) -->
+    <plurals name="quantity_piece">
+        <item quantity="one">%d Parça</item>
+        <item quantity="other">%d Parça</item>
+    </plurals>
+    <plurals name="quantity_item">
+        <item quantity="one">%d Adet</item>
+        <item quantity="other">%d Adet</item>
+    </plurals>
+    <plurals name="quantity_pack">
+        <item quantity="one">%d Paket</item>
+        <item quantity="other">%d Paket</item>
+    </plurals>
+    <plurals name="quantity_kg">
+        <item quantity="one">%d Kg</item>
+        <item quantity="other">%d Kg</item>
+    </plurals>
+    <plurals name="quantity_litre">
+        <item quantity="one">%d Litre</item>
+        <item quantity="other">%d Litre</item>
+    </plurals>
+    <plurals name="quantity_box">
+        <item quantity="one">%d Kutu</item>
+        <item quantity="other">%d Kutu</item>
+    </plurals>
+    <plurals name="quantity_other">
+        <item quantity="one">%d Diğer</item>
+        <item quantity="other">%d Diğer</item>
+    </plurals>
+
+    <!-- Süre ve tarih (ui/TimeTexts.kt) -->
+    <plurals name="duration_days">
+        <item quantity="one">%d gün</item>
+        <item quantity="other">%d gün</item>
+    </plurals>
+    <string name="duration_hours">%d sa</string>
+    <string name="duration_minutes">%d dk</string>
+    <string name="remaining_under_a_minute">1 dk\'dan az</string>
+    <!-- Bitiş: "bugün 18:45", "yarın 09:30", "26 Ekim 10:00" (%1$s saat; tarihte %1$s gün, %2$s saat) -->
+    <string name="end_today">bugün %1$s</string>
+    <string name="end_tomorrow">yarın %1$s</string>
+    <string name="end_on_date">%1$s %2$s</string>
+    <string name="day_today">Bugün</string>
+    <string name="day_yesterday">Dün</string>
+
+    <!-- Alt bar -->
+    <string name="tab_explore">Keşfet</string>
+    <string name="tab_my_requests">İlanlarım</string>
+    <string name="tab_chats">Sohbetler</string>
+    <string name="tab_profile">Profil</string>
+    <plurals name="unread_messages">
+        <item quantity="one">%d okunmamış mesaj</item>
+        <item quantity="other">%d okunmamış mesaj</item>
+    </plurals>
+
+    <!-- Keşfet -->
+    <string name="explore_search_area">Arama alanı</string>
+    <string name="explore_map_hint">Ayrıntı için haritadaki işarete ya da aşağıdaki talebe dokun.</string>
+    <plurals name="explore_results">
+        <item quantity="one">%d talep · yakından uzağa</item>
+        <item quantity="other">%d talep · yakından uzağa</item>
+    </plurals>
+    <string name="explore_searching">Talepler aranıyor…</string>
+    <string name="explore_empty_title">Bu alanda talep yok</string>
+    <string name="explore_empty_body">Alanı büyütmeyi dene. Yakınında yeni talepler açıldıkça burada görünür.</string>
+    <string name="explore_expand_area">Alanı genişlet</string>
+    <string name="explore_load_failed">Talepler yüklenemedi</string>
+    <string name="explore_missing_requester">Talep sahibi bilgisi bulunamadı</string>
+
+    <!-- Harita ve konum -->
+    <string name="map_selected_location">Seçilen konum</string>
+    <string name="map_my_location">Konumuma git</string>
+    <string name="location_loading">Konum alınıyor…</string>
+    <string name="location_permission_title">Konum izni gerekli</string>
+    <string name="location_permission_body">Talebini doğru yere koymak ve yakınındakileri bulmak için konumuna ihtiyaç var.</string>
+    <string name="location_permission_allow">İzin ver</string>
+    <string name="location_open_settings">Ayarları aç</string>
+    <string name="location_off_title">Konum kapalı</string>
+    <string name="location_off_body">Cihazının konum servisini açman gerekiyor.</string>
+    <string name="location_turn_on">Konumu aç</string>
+    <string name="location_unavailable_title">Konum alınamadı</string>
+    <string name="location_unavailable_body">Biraz sonra tekrar dene.</string>
+    <string name="location_pick_manually">Haritadan kendim seçeceğim</string>
+    <string name="location_pick_hint">Haritayı kaydırarak pini talebin olduğu yere getir.</string>
+    <string name="offer_sent">Talep sahibine haber verildi</string>
+    <string name="offer_already_sent">Talep sahibine zaten haber vermiştin</string>
+
+    <!-- Talep kartları -->
+    <string name="time_left">%1$s kaldı</string>
+    <string name="distance_away">%1$s uzakta</string>
+
+    <!-- Talep detayı -->
+    <string name="request_supply">Bende var, verebilirim</string>
+    <string name="request_supply_hint">Talep sahibine haber verilir ve sohbet açılır.</string>
+    <string name="request_requester">Talep eden: %1$s</string>
+    <string name="request_requester_unknown">bilinmiyor</string>
+    <plurals name="same_spot_title">
+        <item quantity="one">Bu noktada %d talep</item>
+        <item quantity="other">Bu noktada %d talep</item>
+    </plurals>
+    <string name="same_spot_hint">Ayrıntı için birine dokun.</string>
+
+    <!-- Sohbetler -->
+    <string name="chats_empty_title">Henüz sohbetin yok</string>
+    <string name="chats_empty_body">Bir talebe “Bende var” dediğinde ya da biri senin talebine teklif verdiğinde sohbet burada başlar.</string>
+    <string name="chats_load_failed">Sohbetler yüklenemedi</string>
+    <string name="chats_you_prefix">Sen: %1$s</string>
+    <string name="chat_input_placeholder">Mesaj yaz…</string>
+    <string name="chat_send">Gönder</string>
+    <string name="chat_sending">gönderiliyor…</string>
+    <string name="chat_failed">gönderilemedi, dokunup tekrar dene</string>
+    <string name="chat_retry">Tekrar gönder</string>
+    <string name="chat_empty">İlk mesajı yaz; ne zaman, nerede buluşacağınızı konuşun.</string>
+
+    <!-- Giriş -->
+    <string name="auth_tagline">Komşundan hemen iste, elindekini hemen ver.</string>
+    <string name="auth_login">Giriş yap</string>
+    <string name="auth_register">Kayıt ol</string>
+    <string name="auth_username">Kullanıcı adı</string>
+    <string name="auth_email">E-posta</string>
+    <string name="auth_password">Şifre</string>
+    <string name="auth_password_rule">En az 8 karakter, harf ve rakam</string>
+    <string name="auth_show_password">Şifreyi göster</string>
+    <string name="auth_hide_password">Şifreyi gizle</string>
+    <string name="auth_error_username_required">Kullanıcı adı zorunlu</string>
+    <string name="auth_error_email_required">E-posta zorunlu</string>
+    <string name="auth_error_email_invalid">Geçersiz e-posta</string>
+    <string name="auth_error_password_required">Şifre zorunlu</string>
+    <string name="auth_registered">Kayıt başarılı, şimdi giriş yap</string>
+
+    <!-- Profil -->
+    <string name="profile_notifications">Bildirim ayarları</string>
+    <string name="profile_notifications_hint">Teklif ve mesaj bildirimleri</string>
+    <string name="profile_language">Dil</string>
+    <!-- Bu dosyanın dilinin kendi dilindeki adı -->
+    <string name="language_name">Türkçe</string>
+    <string name="profile_my_requests_hint">Açtığın talepler</string>
+    <string name="profile_logout">Çıkış yap</string>
+    <string name="profile_logging_out">Çıkış yapılıyor…</string>
+    <string name="profile_logout_confirm_title">Çıkış yapılsın mı?</string>
+    <string name="profile_logout_confirm_body">Bu cihaz çıkıştan sonra bu hesabın bildirimlerini almaz.</string>
+    <string name="profile_version">Sürüm %1$s</string>
+    <string name="profile_default_name">Kullanıcı</string>
+    <string name="profile_logged_out">Çıkış yapıldı</string>
+    <string name="cancel">Vazgeç</string>
+
+    <!-- Talep açma -->
+    <string name="create_request">Talep aç</string>
+    <string name="create_request_title">Yeni talep</string>
+    <string name="publish">Yayınla</string>
+    <string name="form_section_what">Ne lazım?</string>
+    <string name="form_section_where">Nerede?</string>
+    <string name="form_section_how_long">Ne kadar süre?</string>
+    <string name="form_title_label">Başlık</string>
+    <string name="form_title_placeholder">Örn. 2 kg un, priz adaptörü</string>
+    <string name="form_category">Kategori</string>
+    <string name="form_quantity">Miktar</string>
+    <string name="form_quantity_decrease">Miktarı azalt</string>
+    <string name="form_quantity_increase">Miktarı artır</string>
+    <string name="form_unit">Birim</string>
+    <string name="form_description_label">Açıklama (isteğe bağlı)</string>
+    <string name="form_visible_area">Talebin görüneceği alan</string>
+    <string name="form_counter">%1$d/%2$d</string>
+    <!-- Yayınla çubuğundaki özet: alan · süre · bitiş -->
+    <string name="form_summary">%1$s · %2$s · bitiş %3$s</string>
+    <string name="notification_prompt_title">Teklif gelince haber verelim mi?</string>
+    <string name="notification_prompt_body">Biri “Bende var” dediğinde bildirimle haber veririz. İzni sonra Profil\'den de açabilirsin.</string>
+    <string name="notification_prompt_allow">İzin ver</string>
+    <string name="notification_prompt_later">Şimdi değil</string>
+    <string name="form_error_title_required">Başlık gerekli</string>
+    <string name="form_error_category_required">Kategori seç</string>
+    <string name="form_error_quantity_positive">Miktar sıfırdan büyük olmalı</string>
+    <string name="form_error_location">Haritadan bir konum seç</string>
+    <string name="request_published">Talebin yayında</string>
+    <string name="duration_picker_title">Ne kadar süre açık kalsın?</string>
+    <string name="duration_ends_at">Bitiş: %1$s</string>
+    <string name="picker_minutes">%02d dk</string>
+    <string name="picker_hours_description">Saat</string>
+    <string name="picker_minutes_description">Dakika</string>
+
+    <!-- İlanlarım -->
+    <string name="my_requests_empty_title">Henüz talebin yok</string>
+    <string name="my_requests_empty_body">Bir şeye ihtiyacın olduğunda talep aç; yakınındakiler görsün.</string>
+    <string name="my_requests_load_failed">Taleplerin yüklenemedi</string>
+    <string name="my_requests_section_open">Açık</string>
+    <string name="my_requests_section_past">Geçmiş</string>
+    <string name="status_open">Açık</string>
+    <string name="status_expired">Süresi doldu</string>
+    <string name="status_completed">Tamamlandı</string>
+    <string name="status_cancelled">İptal edildi</string>
+    <string name="status_matched">Eşleşti</string>
+    <!-- Açık rozeti: "Açık · 2 sa 15 dk kaldı" -->
+    <string name="status_open_with_time">Açık · %1$s kaldı</string>
+    <string name="action_complete">Tamamlandı</string>
+    <string name="action_cancel">İptal et</string>
+    <string name="action_extend">Süre uzat</string>
+    <string name="cancel_confirm_title">Talebi iptal edelim mi?</string>
+    <string name="cancel_confirm_body">İptal edilen talep artık kimseye görünmez.</string>
+    <string name="cancel_confirm_yes">İptal et</string>
+    <string name="cancel_confirm_no">Vazgeç</string>
+    <string name="extend_title">Süreyi uzat</string>
+    <string name="extend_body">Talebin ne kadar daha açık kalsın?</string>
+    <string name="extend_confirm">Uzat</string>
+    <string name="extend_new_end">Yeni bitiş: %1$s</string>
+    <string name="extend_capped">Bir talep en fazla 24 saat sonrasına kadar açık kalabilir.</string>
+    <string name="request_completed">Talep tamamlandı</string>
+    <string name="request_cancelled">Talep iptal edildi</string>
+    <string name="request_extended">Süre uzatıldı</string>
+
+    <!-- Bildirimler. notif_supply_offer_* adları sunucuyla sözleşme: push bu anahtarlarla gelir -->
+    <string name="notif_channel_name">Teklif bildirimleri</string>
+    <string name="notif_channel_description">Biri talebine “Bende var” dediğinde</string>
+    <string name="notif_supply_offer_title">Talebine yanıt var</string>
+    <string name="notif_supply_offer_body">“%1$s” talebin için biri “Bende var” dedi. Sohbeti açmak için dokun.</string>
+</resources>

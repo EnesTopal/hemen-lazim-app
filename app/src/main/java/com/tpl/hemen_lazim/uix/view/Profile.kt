@@ -2,7 +2,10 @@ package com.tpl.hemen_lazim.uix.view
 
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
+import android.os.Build
 import android.provider.Settings
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -11,6 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ListAlt
 import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.outlined.ChevronRight
+import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.NotificationsActive
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -54,6 +58,10 @@ fun Profile(
         onOpenMyRequests = onOpenMyRequests,
         // İzin sistem ayarında: "Şimdi değil" diyen ya da reddeden buradan açabilir
         onOpenNotificationSettings = { context.startActivity(notificationSettingsIntent(context)) },
+        // Uygulamaya özel dil Android 13'te geldi; öncesinde uygulama telefonun dilinde
+        onOpenLanguageSettings = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            { context.startActivity(languageSettingsIntent(context)) }
+        } else null,
         onLogout = {
             isLoggingOut = true
             scope.launch {
@@ -76,6 +84,7 @@ private fun ProfileContent(
     isLoggingOut: Boolean,
     onOpenMyRequests: () -> Unit,
     onOpenNotificationSettings: () -> Unit,
+    onOpenLanguageSettings: (() -> Unit)?,
     onLogout: () -> Unit
 ) {
     var confirmLogout by remember { mutableStateOf(false) }
@@ -112,6 +121,14 @@ private fun ProfileContent(
                 subtitle = stringResource(R.string.profile_notifications_hint),
                 onClick = onOpenNotificationSettings
             )
+            onOpenLanguageSettings?.let {
+                ProfileRow(
+                    icon = Icons.Outlined.Language,
+                    title = stringResource(R.string.profile_language),
+                    subtitle = stringResource(R.string.language_name),
+                    onClick = it
+                )
+            }
             HorizontalDivider()
             ListItem(
                 modifier = Modifier.clickable(enabled = !isLoggingOut) { confirmLogout = true },
@@ -175,6 +192,11 @@ private fun notificationSettingsIntent(context: Context): Intent =
     Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
         .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
 
+// Seçenekler manifestteki localeConfig'den (build.gradle.kts generateLocaleConfig)
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
+private fun languageSettingsIntent(context: Context): Intent =
+    Intent(Settings.ACTION_APP_LOCALE_SETTINGS, Uri.fromParts("package", context.packageName, null))
+
 private fun appVersion(context: Context): String? =
     runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull()
 
@@ -190,6 +212,7 @@ internal fun ProfilePreview() {
             isLoggingOut = false,
             onOpenMyRequests = {},
             onOpenNotificationSettings = {},
+            onOpenLanguageSettings = {},
             onLogout = {}
         )
     }

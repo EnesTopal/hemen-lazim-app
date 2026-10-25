@@ -38,6 +38,13 @@ android {
     buildFeatures {
         compose = true
     }
+    androidResources {
+        // Android 13+ ayarlarında uygulamaya özel dil seçimi: diller res/values-* klasörlerinden,
+        // varsayılan values/'un dili res/resources.properties'te
+        generateLocaleConfig = true
+        // Kütüphanelerin başka dillerdeki metinleri girmesin: desteklenmeyen dilde her şey İngilizce
+        localeFilters += listOf("en", "tr")
+    }
 }
 
 dependencies {

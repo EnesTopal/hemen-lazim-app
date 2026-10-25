@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import com.tpl.hemen_lazim.R
 import com.tpl.hemen_lazim.model.DTOs.MaterialRequestDTO
 import com.tpl.hemen_lazim.model.enums.label
+import com.tpl.hemen_lazim.model.enums.quantity
 import com.tpl.hemen_lazim.ui.distanceText
 import com.tpl.hemen_lazim.ui.remainingText
 import com.tpl.hemen_lazim.ui.theme.Spacing
@@ -81,8 +82,11 @@ fun NearbyRequestCard(
 /** "2 Kg · Yemek Malzemesi"; miktar yoksa yalnızca kategori. */
 @Composable
 @ReadOnlyComposable
-fun quantityAndCategory(request: MaterialRequestDTO): String {
-    val unit = request.units?.label()
-    val quantity = request.quantity?.let { q -> listOfNotNull("$q", unit).joinToString(" ") }
-    return listOfNotNull(quantity, request.category.label()).joinToString(" · ")
-}
+fun quantityAndCategory(request: MaterialRequestDTO): String =
+    listOfNotNull(quantityText(request), request.category.label()).joinToString(" · ")
+
+/** "2 Paket" / "2 packs"; birim yoksa yalnızca sayı, miktar yoksa null. */
+@Composable
+@ReadOnlyComposable
+fun quantityText(request: MaterialRequestDTO): String? =
+    request.quantity?.let { q -> request.units?.quantity(q) ?: "$q" }

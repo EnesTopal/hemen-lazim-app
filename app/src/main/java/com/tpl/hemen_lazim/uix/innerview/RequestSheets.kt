@@ -90,8 +90,8 @@ private fun RequestDetailContent(request: MaterialRequestDTO, isSending: Boolean
             horizontalArrangement = Arrangement.spacedBy(Spacing.s),
             verticalArrangement = Arrangement.spacedBy(Spacing.s)
         ) {
-            request.quantity?.let { quantity ->
-                InfoPill(Icons.Outlined.Inventory2, listOfNotNull("$quantity", request.units?.label()).joinToString(" "))
+            quantityText(request)?.let { quantity ->
+                InfoPill(Icons.Outlined.Inventory2, quantity)
             }
             request.distanceMeters?.let { meters ->
                 InfoPill(Icons.Outlined.NearMe, stringResource(R.string.distance_away, distanceText(meters)))
