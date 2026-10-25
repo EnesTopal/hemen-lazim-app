@@ -38,8 +38,8 @@ import com.tpl.hemen_lazim.uix.innerview.Avatar
 import com.tpl.hemen_lazim.uix.preview.PreviewData
 import com.tpl.hemen_lazim.uix.preview.PreviewScreen
 import com.tpl.hemen_lazim.uix.preview.ScreenPreviews
-import com.tpl.hemen_lazim.utils.formatClock
-import com.tpl.hemen_lazim.utils.formatDayLabel
+import com.tpl.hemen_lazim.ui.clockText
+import com.tpl.hemen_lazim.ui.dayLabelText
 import kotlinx.coroutines.delay
 import java.time.Instant
 import java.time.LocalDate
@@ -58,7 +58,10 @@ private sealed interface ChatRow {
     val key: String
 }
 
-private data class DayRow(val label: String, override val key: String) : ChatRow
+// Gün metni ("Bugün", "23 Ekim") ekranda, telefonun dilinde kurulur
+private data class DayRow(val day: LocalDate) : ChatRow {
+    override val key: String get() = "day-$day"
+}
 
 private data class MessageRow(val message: Message) : ChatRow {
     override val key: String get() = message.uiKey
@@ -70,7 +73,7 @@ private fun buildRows(messages: List<Message>, zone: ZoneId = ZoneId.systemDefau
     messages.forEach { message ->
         val day = Instant.ofEpochMilli(message.serverTimestamp).atZone(zone).toLocalDate()
         if (day != lastDay) {
-            rows += DayRow(formatDayLabel(message.serverTimestamp), "day-$day")
+            rows += DayRow(day)
             lastDay = day
         }
         rows += MessageRow(message)
@@ -220,7 +223,7 @@ private fun ChatContent(
                     }
                     items(rows, key = { it.key }) { row ->
                         when (row) {
-                            is DayRow -> DaySeparator(row.label)
+                            is DayRow -> DaySeparator(dayLabelText(row.day))
                             is MessageRow ->
                                     MessageItem(
                                             message = row.message,
@@ -362,7 +365,7 @@ fun MessageItem(message: Message, isOwnMessage: Boolean, onRetry: () -> Unit) {
                     // Gönderim onayı gelene kadar saat yerine durum yazısı
                     if (!isSending && !isFailed) {
                         Text(
-                                text = formatClock(message.serverTimestamp),
+                                text = clockText(message.serverTimestamp),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = content.copy(alpha = 0.7f),
                                 modifier = Modifier.align(Alignment.End)

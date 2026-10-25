@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -20,6 +21,7 @@ import com.google.maps.android.compose.GoogleMapComposable
 import com.google.maps.android.compose.MapsComposeExperimentalApi
 import com.google.maps.android.compose.clustering.Clustering
 import com.tpl.hemen_lazim.model.DTOs.MaterialRequestDTO
+import com.tpl.hemen_lazim.model.enums.labelRes
 import com.tpl.hemen_lazim.model.enums.toEmoji
 import com.tpl.hemen_lazim.uix.innerview.RequestClusterItem
 import kotlinx.coroutines.launch
@@ -43,7 +45,10 @@ fun RequestMarkers(
     onSameSpotClick: (List<MaterialRequestDTO>) -> Unit
 ) {
     val scope = rememberCoroutineScope()
-    val items = remember(requests) { requests.map(::RequestClusterItem) }
+    val context = LocalContext.current
+    val items = remember(requests, context) {
+        requests.map { RequestClusterItem(it, context.getString(it.category.labelRes())) }
+    }
 
     Clustering(
         items = items,

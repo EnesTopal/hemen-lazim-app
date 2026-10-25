@@ -43,6 +43,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -54,6 +55,7 @@ import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.GoogleMapComposable
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
+import com.tpl.hemen_lazim.R
 import kotlinx.coroutines.delay
 
 private val MAP_HEIGHT = 320.dp
@@ -199,7 +201,7 @@ private fun MapContent(
             // İğnenin ucu tam merkezde dursun diye yarı boyu kadar yukarıda
             Icon(
                 imageVector = Icons.Filled.Place,
-                contentDescription = "Seçilen konum",
+                contentDescription = stringResource(R.string.map_selected_location),
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier
                     .align(Alignment.Center)
@@ -217,7 +219,7 @@ private fun MapContent(
             if (location.status == LocationStatus.Loading && !inPreview) {
                 CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
             } else {
-                Icon(Icons.Filled.MyLocation, contentDescription = "Konumuma git")
+                Icon(Icons.Filled.MyLocation, contentDescription = stringResource(R.string.map_my_location))
             }
         }
     }
@@ -258,20 +260,20 @@ private fun LocationPlaceholder(
         if (status == LocationStatus.Loading || status == LocationStatus.Ready) {
             CircularProgressIndicator()
             Spacer(Modifier.height(12.dp))
-            Text("Konum alınıyor…", style = MaterialTheme.typography.bodyMedium)
+            Text(stringResource(R.string.location_loading), style = MaterialTheme.typography.bodyMedium)
         } else {
             val (title, body, action) = when (status) {
                 is LocationStatus.PermissionDenied -> Triple(
-                    "Konum izni gerekli",
-                    "Talebini doğru yere koymak ve yakınındakileri bulmak için konumuna ihtiyaç var.",
-                    if (status.canAskAgain) "İzin ver" else "Ayarları aç"
+                    R.string.location_permission_title,
+                    R.string.location_permission_body,
+                    if (status.canAskAgain) R.string.location_permission_allow else R.string.location_open_settings
                 )
                 LocationStatus.LocationOff -> Triple(
-                    "Konum kapalı",
-                    "Cihazının konum servisini açman gerekiyor.",
-                    "Konumu aç"
+                    R.string.location_off_title,
+                    R.string.location_off_body,
+                    R.string.location_turn_on
                 )
-                else -> Triple("Konum alınamadı", "Biraz sonra tekrar dene.", "Tekrar dene")
+                else -> Triple(R.string.location_unavailable_title, R.string.location_unavailable_body, R.string.retry)
             }
             Icon(
                 imageVector = Icons.Filled.LocationOff,
@@ -280,16 +282,16 @@ private fun LocationPlaceholder(
                 modifier = Modifier.size(40.dp)
             )
             Spacer(Modifier.height(12.dp))
-            Text(title, style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(title), style = MaterialTheme.typography.titleMedium)
             Spacer(Modifier.height(4.dp))
             Text(
-                text = body,
+                text = stringResource(body),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )
             Spacer(Modifier.height(16.dp))
-            Button(onClick = onResolve) { Text(action) }
+            Button(onClick = onResolve) { Text(stringResource(action)) }
         }
         extraAction?.invoke()
     }

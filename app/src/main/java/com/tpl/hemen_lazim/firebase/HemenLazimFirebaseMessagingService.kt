@@ -53,15 +53,14 @@ class HemenLazimFirebaseMessagingService : FirebaseMessagingService() {
         super.onMessageReceived(message)
         Log.d(TAG, "Message received from: ${message.from}")
 
-        var title = "Hemen Lazım"
+        var title = getString(R.string.app_name)
         var body = ""
         
-        // Check if message contains a notification payload
+        // Sunucu metin değil yerelleştirme anahtarı gönderiyor. Uygulama arkadayken bildirimi
+        // sistem aynı anahtarla çözüyor; öndeyken bildirimi biz kurduğumuz için burada çözülür.
         message.notification?.let {
-            Log.d(TAG, "Message Notification Title: ${it.title}")
-            Log.d(TAG, "Message Notification Body: ${it.body}")
-            title = it.title ?: title
-            body = it.body ?: ""
+            title = localized(it.titleLocalizationKey, it.titleLocalizationArgs) ?: it.title ?: title
+            body = localized(it.bodyLocalizationKey, it.bodyLocalizationArgs) ?: it.body ?: ""
         }
 
         // Check if message contains a data payload
@@ -81,6 +80,16 @@ class HemenLazimFirebaseMessagingService : FirebaseMessagingService() {
         } else {
             Log.w(TAG, "Notification body is empty, not showing notification")
         }
+    }
+
+    /** Sunucunun gönderdiği anahtarlar (sunucu: NotificationService); bilinmeyen anahtarda null. */
+    private fun localized(key: String?, args: Array<String>?): String? {
+        val id = when (key) {
+            "notif_supply_offer_title" -> R.string.notif_supply_offer_title
+            "notif_supply_offer_body" -> R.string.notif_supply_offer_body
+            else -> return null
+        }
+        return getString(id, *(args ?: emptyArray()))
     }
 
     private fun showNotification(title: String, body: String, data: Map<String, String>) {
@@ -145,10 +154,10 @@ class HemenLazimFirebaseMessagingService : FirebaseMessagingService() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 CHANNEL_ID,
-                "Tedarik Teklifleri",
+                getString(R.string.notif_channel_name),
                 NotificationManager.IMPORTANCE_HIGH // HIGH for heads-up notifications
             ).apply {
-                description = "Malzeme talepleri için bildirimler"
+                description = getString(R.string.notif_channel_description)
                 enableVibration(true)
                 vibrationPattern = longArrayOf(0, 500, 200, 500)
                 enableLights(true)

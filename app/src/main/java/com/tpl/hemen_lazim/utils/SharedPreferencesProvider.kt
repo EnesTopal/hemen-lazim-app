@@ -3,7 +3,6 @@ package com.tpl.hemen_lazim.utils
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Base64
-import android.widget.Toast
 import org.json.JSONObject
 
 object SharedPreferencesProvider {
@@ -103,28 +102,5 @@ object SharedPreferencesProvider {
         } catch (_: Exception) {
             null
         }
-    }
-    fun isTokenValidWithToast(context: Context): Boolean {
-        val token =
-                getAccessToken()
-                        ?: return false.also {
-                            Toast.makeText(context, "Oturum bulunamadı.", Toast.LENGTH_SHORT).show()
-                        }
-        val exp =
-                getTokenExpirationTime(token)
-                        ?: return false.also {
-                            Toast.makeText(context, "Geçersiz oturum.", Toast.LENGTH_SHORT).show()
-                        }
-        val currentTime = System.currentTimeMillis() / 1000
-        val isValid = currentTime < exp
-        if (!isValid) {
-            Toast.makeText(
-                            context,
-                            "Oturum süresi dolmuş. Lütfen tekrar giriş yapın.",
-                            Toast.LENGTH_LONG
-                    )
-                    .show()
-        }
-        return isValid
     }
 }

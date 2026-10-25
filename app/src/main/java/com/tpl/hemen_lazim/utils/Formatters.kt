@@ -2,84 +2,62 @@ package com.tpl.hemen_lazim.utils
 
 import java.time.Duration
 import java.time.Instant
-import java.time.ZoneId
-import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoUnit
+import java.time.LocalDate
 import java.util.Locale
 import kotlin.math.roundToInt
 
+// Dile bağlı kelimeler (dk, bugün, Dün...) burada yok: ekranda ui/TimeTexts.kt strings.xml'den
+// kuruyor. Buradaki işlevler yalnızca hesaplıyor ve testleri JVM'de çalışıyor.
+
 private val TURKISH: Locale = Locale.forLanguageTag("tr-TR")
 
-/** "850 m" / "1,2 km" */
-fun formatDistance(meters: Double): String {
+/** "850 m" / "1,2 km" (ondalık ayırıcı dile göre: İngilizcede "1.2 km") */
+fun formatDistance(meters: Double, locale: Locale = Locale.getDefault()): String {
     val roundedMeters = (meters / 10).roundToInt() * 10
     return if (roundedMeters < 1000) "$roundedMeters m"
-    else String.format(TURKISH, "%.1f km", meters / 1000)
+    else String.format(locale, "%.1f km", meters / 1000)
 }
 
-fun formatRadiusKm(km: Float): String = formatDistance(km * 1000.0)
+fun formatRadiusKm(km: Float, locale: Locale = Locale.getDefault()): String = formatDistance(km * 1000.0, locale)
 
-/** "45 dk" / "2 sa 15 dk" / "1 gün" */
-fun formatDuration(minutes: Int): String {
-    val days = minutes / (24 * 60)
-    val hours = minutes % (24 * 60) / 60
-    val mins = minutes % 60
-    return listOfNotNull(
-        days.takeIf { it > 0 }?.let { "$it gün" },
-        hours.takeIf { it > 0 }?.let { "$it sa" },
-        mins.takeIf { it > 0 }?.let { "$it dk" }
-    ).joinToString(" ").ifEmpty { "0 dk" }
-}
+data class DurationParts(val days: Int, val hours: Int, val minutes: Int)
 
-/** Şimdiden [minutes] sonrası: "bugün 18:45" / "yarın 09:30" / "26 Ekim 10:00" */
-fun formatEndTime(minutes: Int, now: ZonedDateTime = ZonedDateTime.now()): String {
-    val end = now.plusMinutes(minutes.toLong())
-    val day = when (ChronoUnit.DAYS.between(now.toLocalDate(), end.toLocalDate())) {
-        0L -> "bugün"
-        1L -> "yarın"
-        else -> end.format(DateTimeFormatter.ofPattern("d MMMM", TURKISH))
-    }
-    return "$day ${end.format(DateTimeFormatter.ofPattern("HH:mm", TURKISH))}"
+fun splitDuration(totalMinutes: Int): DurationParts = DurationParts(
+    days = totalMinutes / (24 * 60),
+    hours = totalMinutes % (24 * 60) / 60,
+    minutes = totalMinutes % 60
+)
+
+/** Bitişe kalan süre. */
+sealed interface Remaining {
+    data object Expired : Remaining
+    data object UnderAMinute : Remaining
+    data class Minutes(val minutes: Int) : Remaining
 }
 
 /** Sunucunun ISO-8601 bitiş anına kalan süre; okunamazsa null. */
-fun formatRemaining(expiresAt: String, now: Instant = Instant.now()): String? {
+fun remainingUntil(expiresAt: String, now: Instant = Instant.now()): Remaining? {
     val left = runCatching { Duration.between(now, Instant.parse(expiresAt)) }.getOrNull() ?: return null
     return when {
-        left.isNegative -> "Süresi doldu"
-        left.toMinutes() < 1 -> "1 dk'dan az"
-        else -> formatDuration(left.toMinutes().toInt())
+        left.isNegative -> Remaining.Expired
+        left.toMinutes() < 1 -> Remaining.UnderAMinute
+        else -> Remaining.Minutes(left.toMinutes().toInt())
     }
 }
 
-/** Mesaj saati: "14:05" */
-fun formatClock(epochMillis: Long, zone: ZoneId = ZoneId.systemDefault()): String =
-    Instant.ofEpochMilli(epochMillis).atZone(zone).format(DateTimeFormatter.ofPattern("HH:mm", TURKISH))
+enum class RelativeDay { TODAY, TOMORROW, YESTERDAY, THIS_YEAR, OTHER_YEAR }
 
-/** Sohbet listesindeki son mesaj zamanı: bugünse "14:05", dünse "Dün", bu yıl "23 Eki", yoksa "23.10.2025". */
-fun formatChatListTime(epochMillis: Long, now: ZonedDateTime = ZonedDateTime.now()): String {
-    val time = Instant.ofEpochMilli(epochMillis).atZone(now.zone)
-    return when {
-        time.toLocalDate() == now.toLocalDate() -> time.format(DateTimeFormatter.ofPattern("HH:mm", TURKISH))
-        time.toLocalDate() == now.toLocalDate().minusDays(1) -> "Dün"
-        time.year == now.year -> time.format(DateTimeFormatter.ofPattern("d MMM", TURKISH))
-        else -> time.format(DateTimeFormatter.ofPattern("dd.MM.yyyy", TURKISH))
-    }
+fun relativeDay(date: LocalDate, today: LocalDate): RelativeDay = when (date) {
+    today -> RelativeDay.TODAY
+    today.plusDays(1) -> RelativeDay.TOMORROW
+    today.minusDays(1) -> RelativeDay.YESTERDAY
+    else -> if (date.year == today.year) RelativeDay.THIS_YEAR else RelativeDay.OTHER_YEAR
 }
 
-/** Sohbetteki gün ayracı: "Bugün", "Dün", "23 Ekim" ya da başka yılsa "23 Ekim 2025". */
-fun formatDayLabel(epochMillis: Long, now: ZonedDateTime = ZonedDateTime.now()): String {
-    val day = Instant.ofEpochMilli(epochMillis).atZone(now.zone).toLocalDate()
-    return when {
-        day == now.toLocalDate() -> "Bugün"
-        day == now.toLocalDate().minusDays(1) -> "Dün"
-        day.year == now.year -> day.format(DateTimeFormatter.ofPattern("d MMMM", TURKISH))
-        else -> day.format(DateTimeFormatter.ofPattern("d MMMM yyyy", TURKISH))
-    }
-}
-
-/** Avatar için baş harfler: "ayşe yılmaz" → "AY", "cem" → "C". Türkçe büyük harf ("i" → "İ"). */
+/**
+ * Avatar için baş harfler: "ayşe yılmaz" → "AY", "cem" → "C". İsimlerin çoğu Türkçe olduğu
+ * için telefonun dilinden bağımsız Türkçe büyük harf ("i" → "İ").
+ */
 fun initialsOf(name: String): String =
     name.trim().split(Regex("\\s+"))
         .filter { it.isNotEmpty() }

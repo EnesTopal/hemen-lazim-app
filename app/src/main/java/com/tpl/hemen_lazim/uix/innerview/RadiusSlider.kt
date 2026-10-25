@@ -15,7 +15,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import com.tpl.hemen_lazim.model.RequestLimits
-import com.tpl.hemen_lazim.utils.formatRadiusKm
+import com.tpl.hemen_lazim.ui.radiusText
 import kotlin.math.sqrt
 
 /**
@@ -37,7 +37,7 @@ fun RadiusSlider(
     maxKm: Float = RequestLimits.MAX_RADIUS_KM
 ) {
     val span = maxKm - minKm
-    val label = formatRadiusKm(radiusKm)
+    val label = radiusText(radiusKm)
 
     Column(modifier.fillMaxWidth()) {
         Row(
@@ -69,12 +69,12 @@ fun RadiusSlider(
 
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Text(
-                text = formatRadiusKm(minKm),
+                text = radiusText(minKm),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
-                text = formatRadiusKm(maxKm),
+                text = radiusText(maxKm),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

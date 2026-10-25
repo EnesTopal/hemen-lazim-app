@@ -42,7 +42,7 @@ import com.tpl.hemen_lazim.R
 import com.tpl.hemen_lazim.model.MaterialFormState
 import com.tpl.hemen_lazim.model.enums.Category
 import com.tpl.hemen_lazim.model.enums.Units
-import com.tpl.hemen_lazim.model.enums.toDisplayName
+import com.tpl.hemen_lazim.model.enums.label
 import com.tpl.hemen_lazim.model.enums.toEmoji
 import com.tpl.hemen_lazim.ui.theme.Spacing
 
@@ -139,7 +139,7 @@ private fun ColumnScope.WhatSection(ui: MaterialFormState, actions: CreateFormAc
             FilterChip(
                 selected = ui.category == category,
                 onClick = { actions.onCategory(category) },
-                label = { Text("${category.toEmoji()} ${category.toDisplayName()}") }
+                label = { Text("${category.toEmoji()} ${category.label()}") }
             )
         }
     }
@@ -161,7 +161,7 @@ private fun ColumnScope.WhatSection(ui: MaterialFormState, actions: CreateFormAc
             FilterChip(
                 selected = ui.units == unit,
                 onClick = { actions.onUnit(unit) },
-                label = { Text(unit.toDisplayName()) }
+                label = { Text(unit.label()) }
             )
         }
     }

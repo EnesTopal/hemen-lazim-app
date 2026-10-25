@@ -15,11 +15,13 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.rememberCameraPositionState
+import com.tpl.hemen_lazim.R
 import com.tpl.hemen_lazim.uix.innerview.map.HemenMapCard
 import com.tpl.hemen_lazim.uix.innerview.map.boundsAround
 import com.tpl.hemen_lazim.uix.innerview.map.rememberLocationController
@@ -96,11 +98,11 @@ fun LocationMapComponent(
                 scope.launch { cameraPositionState.animate(CameraUpdateFactory.newLatLng(tapped), 300) }
             },
             placeholderAction = {
-                TextButton(onClick = { manualPick = true }) { Text("Haritadan kendim seçeceğim") }
+                TextButton(onClick = { manualPick = true }) { Text(stringResource(R.string.location_pick_manually)) }
             }
         )
         Text(
-            text = "Haritayı kaydırarak pini talebin olduğu yere getir.",
+            text = stringResource(R.string.location_pick_hint),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 8.dp)

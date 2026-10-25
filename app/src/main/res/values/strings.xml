@@ -1,6 +1,8 @@
 <resources>
-    <string name="app_name">Hemen Lazım</string>
-    <string name="default_notification_channel_id">default_channel_id</string>
+    <string name="app_name" translatable="false">Hemen Lazım</string>
+    <!-- Bu dosyanın dili: sayı, saat ve tarih de bu dile göre yazılır (ui/TimeTexts.kt contentLocale) -->
+    <string name="content_locale">tr</string>
+    <string name="default_notification_channel_id" translatable="false">default_channel_id</string>
 
     <!-- Genel -->
     <string name="back">Geri</string>
@@ -35,6 +37,39 @@
     <string name="error_email_taken">Bu e-posta zaten kayıtlı</string>
     <string name="session_expired">Oturumun sona erdi, lütfen tekrar giriş yap.</string>
 
+    <!-- Kategori ve birim adları -->
+    <string name="category_food">Yemek</string>
+    <string name="category_groceries">Yemek Malzemesi</string>
+    <string name="category_hygiene">Hijyen</string>
+    <string name="category_cleaning">Temizlik</string>
+    <string name="category_clothing">Giyim</string>
+    <string name="category_cosmetics">Kozmetik</string>
+    <string name="category_electronics">Elektronik</string>
+    <string name="category_stationery">Kırtasiye</string>
+    <string name="category_other">Diğer</string>
+    <string name="unit_piece">Parça</string>
+    <string name="unit_count">Adet</string>
+    <string name="unit_pack">Paket</string>
+    <string name="unit_kg">Kg</string>
+    <string name="unit_litre">Litre</string>
+    <string name="unit_box">Kutu</string>
+    <string name="unit_other">Diğer</string>
+
+    <!-- Süre ve tarih (ui/TimeTexts.kt) -->
+    <plurals name="duration_days">
+        <item quantity="one">%d gün</item>
+        <item quantity="other">%d gün</item>
+    </plurals>
+    <string name="duration_hours">%d sa</string>
+    <string name="duration_minutes">%d dk</string>
+    <string name="remaining_under_a_minute">1 dk\'dan az</string>
+    <!-- Bitiş: "bugün 18:45", "yarın 09:30", "26 Ekim 10:00" (%1$s saat; tarihte %1$s gün, %2$s saat) -->
+    <string name="end_today">bugün %1$s</string>
+    <string name="end_tomorrow">yarın %1$s</string>
+    <string name="end_on_date">%1$s %2$s</string>
+    <string name="day_today">Bugün</string>
+    <string name="day_yesterday">Dün</string>
+
     <!-- Alt bar -->
     <string name="tab_explore">Keşfet</string>
     <string name="tab_my_requests">İlanlarım</string>
@@ -58,6 +93,22 @@
     <string name="explore_expand_area">Alanı genişlet</string>
     <string name="explore_load_failed">Talepler yüklenemedi</string>
     <string name="explore_missing_requester">Talep sahibi bilgisi bulunamadı</string>
+
+    <!-- Harita ve konum -->
+    <string name="map_selected_location">Seçilen konum</string>
+    <string name="map_my_location">Konumuma git</string>
+    <string name="location_loading">Konum alınıyor…</string>
+    <string name="location_permission_title">Konum izni gerekli</string>
+    <string name="location_permission_body">Talebini doğru yere koymak ve yakınındakileri bulmak için konumuna ihtiyaç var.</string>
+    <string name="location_permission_allow">İzin ver</string>
+    <string name="location_open_settings">Ayarları aç</string>
+    <string name="location_off_title">Konum kapalı</string>
+    <string name="location_off_body">Cihazının konum servisini açman gerekiyor.</string>
+    <string name="location_turn_on">Konumu aç</string>
+    <string name="location_unavailable_title">Konum alınamadı</string>
+    <string name="location_unavailable_body">Biraz sonra tekrar dene.</string>
+    <string name="location_pick_manually">Haritadan kendim seçeceğim</string>
+    <string name="location_pick_hint">Haritayı kaydırarak pini talebin olduğu yere getir.</string>
     <string name="offer_sent">Talep sahibine haber verildi</string>
     <string name="offer_already_sent">Talep sahibine zaten haber vermiştin</string>
 
@@ -113,6 +164,8 @@
     <string name="profile_logout_confirm_title">Çıkış yapılsın mı?</string>
     <string name="profile_logout_confirm_body">Bu cihaz çıkıştan sonra bu hesabın bildirimlerini almaz.</string>
     <string name="profile_version">Sürüm %1$s</string>
+    <string name="profile_default_name">Kullanıcı</string>
+    <string name="profile_logged_out">Çıkış yapıldı</string>
     <string name="cancel">Vazgeç</string>
 
     <!-- Talep açma -->
@@ -143,6 +196,11 @@
     <string name="form_error_quantity_positive">Miktar sıfırdan büyük olmalı</string>
     <string name="form_error_location">Haritadan bir konum seç</string>
     <string name="request_published">Talebin yayında</string>
+    <string name="duration_picker_title">Ne kadar süre açık kalsın?</string>
+    <string name="duration_ends_at">Bitiş: %1$s</string>
+    <string name="picker_minutes">%02d dk</string>
+    <string name="picker_hours_description">Saat</string>
+    <string name="picker_minutes_description">Dakika</string>
 
     <!-- İlanlarım -->
     <string name="my_requests_empty_title">Henüz talebin yok</string>
@@ -172,4 +230,10 @@
     <string name="request_completed">Talep tamamlandı</string>
     <string name="request_cancelled">Talep iptal edildi</string>
     <string name="request_extended">Süre uzatıldı</string>
+
+    <!-- Bildirimler. notif_supply_offer_* adları sunucuyla sözleşme: push bu anahtarlarla gelir -->
+    <string name="notif_channel_name">Teklif bildirimleri</string>
+    <string name="notif_channel_description">Biri talebine “Bende var” dediğinde</string>
+    <string name="notif_supply_offer_title">Talebine yanıt var</string>
+    <string name="notif_supply_offer_body">“%1$s” talebin için biri “Bende var” dedi. Sohbeti açmak için dokun.</string>
 </resources>

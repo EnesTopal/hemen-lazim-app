@@ -36,13 +36,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.tpl.hemen_lazim.R
 import com.tpl.hemen_lazim.model.DTOs.MaterialRequestDTO
-import com.tpl.hemen_lazim.model.enums.toDisplayName
+import com.tpl.hemen_lazim.model.enums.label
+import com.tpl.hemen_lazim.ui.distanceText
+import com.tpl.hemen_lazim.ui.remainingText
 import com.tpl.hemen_lazim.ui.theme.Spacing
 import com.tpl.hemen_lazim.uix.preview.ComponentPreviews
 import com.tpl.hemen_lazim.uix.preview.PreviewData
 import com.tpl.hemen_lazim.uix.preview.PreviewSurface
-import com.tpl.hemen_lazim.utils.formatDistance
-import com.tpl.hemen_lazim.utils.formatRemaining
 
 /**
  * Talep ayrıntısı alt sayfada: harita ve liste arkada görünür kalır, tek elle kapatılır.
@@ -79,7 +79,7 @@ private fun RequestDetailContent(request: MaterialRequestDTO, isSending: Boolean
             Column(Modifier.weight(1f)) {
                 Text(request.title, style = MaterialTheme.typography.titleLarge)
                 Text(
-                    request.category.toDisplayName(),
+                    request.category.label(),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -91,12 +91,12 @@ private fun RequestDetailContent(request: MaterialRequestDTO, isSending: Boolean
             verticalArrangement = Arrangement.spacedBy(Spacing.s)
         ) {
             request.quantity?.let { quantity ->
-                InfoPill(Icons.Outlined.Inventory2, listOfNotNull("$quantity", request.units?.toDisplayName()).joinToString(" "))
+                InfoPill(Icons.Outlined.Inventory2, listOfNotNull("$quantity", request.units?.label()).joinToString(" "))
             }
             request.distanceMeters?.let { meters ->
-                InfoPill(Icons.Outlined.NearMe, stringResource(R.string.distance_away, formatDistance(meters)))
+                InfoPill(Icons.Outlined.NearMe, stringResource(R.string.distance_away, distanceText(meters)))
             }
-            request.expiresAt?.let(::formatRemaining)?.let { remaining ->
+            request.expiresAt?.let { remainingText(it) }?.let { remaining ->
                 InfoPill(Icons.Outlined.Schedule, stringResource(R.string.time_left, remaining))
             }
         }

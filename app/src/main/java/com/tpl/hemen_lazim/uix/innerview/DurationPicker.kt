@@ -34,12 +34,14 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.tpl.hemen_lazim.R
 import com.tpl.hemen_lazim.model.RequestLimits
-import com.tpl.hemen_lazim.utils.formatDuration
-import com.tpl.hemen_lazim.utils.formatEndTime
+import com.tpl.hemen_lazim.ui.durationText
+import com.tpl.hemen_lazim.ui.endTimeText
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 
@@ -64,9 +66,12 @@ fun DurationPicker(
 ) {
     val hours = minutes / 60
     val minutePart = minutes % 60
+    // Tekerlek etiketleri çizim dışında da (erişilebilirlik metni) kullanılıyor: kalıplar önceden alınır
+    val hourFormat = stringResource(R.string.duration_hours)
+    val minuteFormat = stringResource(R.string.picker_minutes)
 
     Column(modifier.fillMaxWidth()) {
-        Text(text = "Ne kadar süre açık kalsın?", style = MaterialTheme.typography.titleMedium)
+        Text(text = stringResource(R.string.duration_picker_title), style = MaterialTheme.typography.titleMedium)
         Spacer(Modifier.height(8.dp))
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -74,7 +79,7 @@ fun DurationPicker(
                 FilterChip(
                     selected = minutes == quick,
                     onClick = { onMinutesChange(quick) },
-                    label = { Text(formatDuration(quick)) }
+                    label = { Text(durationText(quick)) }
                 )
             }
         }
@@ -88,22 +93,22 @@ fun DurationPicker(
             WheelPicker(
                 values = HOURS,
                 selected = hours,
-                label = { "$it sa" },
-                description = "Saat",
+                label = { hourFormat.format(it) },
+                description = stringResource(R.string.picker_hours_description),
                 onSelected = { h -> onMinutesChange(clampDuration(h * 60 + minutePart)) }
             )
             WheelPicker(
                 values = MINUTE_STEPS,
                 selected = minutePart,
-                label = { "%02d dk".format(it) },
-                description = "Dakika",
+                label = { minuteFormat.format(it) },
+                description = stringResource(R.string.picker_minutes_description),
                 onSelected = { m -> onMinutesChange(clampDuration(hours * 60 + m)) }
             )
         }
         Spacer(Modifier.height(8.dp))
 
         Text(
-            text = "Bitiş: ${formatEndTime(minutes)}",
+            text = stringResource(R.string.duration_ends_at, endTimeText(minutes)),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )

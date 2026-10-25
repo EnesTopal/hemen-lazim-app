@@ -57,6 +57,8 @@ import com.tpl.hemen_lazim.model.DTOs.MaterialRequestDTO
 import com.tpl.hemen_lazim.model.RequestLimits
 import com.tpl.hemen_lazim.navigation.Routes
 import com.tpl.hemen_lazim.ui.LocalAppSnackbar
+import com.tpl.hemen_lazim.ui.endTimeText
+import com.tpl.hemen_lazim.ui.remainingText
 import com.tpl.hemen_lazim.ui.theme.Spacing
 import com.tpl.hemen_lazim.uix.innerview.CategoryBadge
 import com.tpl.hemen_lazim.uix.innerview.CreateRequestFab
@@ -70,8 +72,6 @@ import com.tpl.hemen_lazim.uix.viewmodel.MyRequestsViewModel
 import com.tpl.hemen_lazim.utils.DisplayStatus
 import com.tpl.hemen_lazim.utils.displayStatus
 import com.tpl.hemen_lazim.utils.extendedEnd
-import com.tpl.hemen_lazim.utils.formatEndTime
-import com.tpl.hemen_lazim.utils.formatRemaining
 import kotlinx.coroutines.delay
 import java.time.Duration
 import java.time.Instant
@@ -265,7 +265,7 @@ private fun MyRequestCard(
                 if (busy) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
             }
             Spacer(Modifier.height(Spacing.s))
-            StatusBadge(status = status, remaining = request.expiresAt?.let { formatRemaining(it, now) })
+            StatusBadge(status = status, remaining = request.expiresAt?.let { remainingText(it, now) })
 
             if (status == DisplayStatus.OPEN && onComplete != null && onCancel != null && onExtend != null) {
                 Spacer(Modifier.height(Spacing.s))
@@ -352,7 +352,7 @@ private fun ExtendSheet(
             )
             DurationPicker(minutes = minutes, onMinutesChange = { minutes = it })
             Text(
-                stringResource(R.string.extend_new_end, formatEndTime(Duration.between(now, newEnd).toMinutes().toInt())),
+                stringResource(R.string.extend_new_end, endTimeText(Duration.between(now, newEnd).toMinutes().toInt())),
                 style = MaterialTheme.typography.titleSmall
             )
             if (capped) {

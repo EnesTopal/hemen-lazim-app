@@ -20,6 +20,7 @@ import com.tpl.hemen_lazim.R
 import com.tpl.hemen_lazim.model.Message
 import com.tpl.hemen_lazim.navigation.Routes
 import com.tpl.hemen_lazim.network.repositories.ChatUnreadStore
+import com.tpl.hemen_lazim.ui.chatListTimeText
 import com.tpl.hemen_lazim.ui.theme.Spacing
 import com.tpl.hemen_lazim.uix.innerview.Avatar
 import com.tpl.hemen_lazim.uix.preview.PreviewData
@@ -27,7 +28,6 @@ import com.tpl.hemen_lazim.uix.preview.PreviewScreen
 import com.tpl.hemen_lazim.uix.preview.ScreenPreviews
 import com.tpl.hemen_lazim.uix.viewmodel.ChatsUiState
 import com.tpl.hemen_lazim.uix.viewmodel.ChatsViewModel
-import com.tpl.hemen_lazim.utils.formatChatListTime
 
 @Composable
 fun Chats(navController: NavController, viewModel: ChatsViewModel = viewModel()) {
@@ -148,7 +148,7 @@ private fun ChatItem(
             trailingContent = {
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
-                            text = formatChatListTime(message.serverTimestamp),
+                            text = chatListTimeText(message.serverTimestamp),
                             style = MaterialTheme.typography.labelSmall,
                             color =
                                     if (hasUnread) MaterialTheme.colorScheme.primary

@@ -58,9 +58,9 @@ import com.tpl.hemen_lazim.uix.preview.PreviewScreen
 import com.tpl.hemen_lazim.uix.preview.ScreenPreviews
 import com.tpl.hemen_lazim.uix.viewmodel.MaterialRequestCreateViewModel
 import com.tpl.hemen_lazim.utils.SharedPreferencesProvider
-import com.tpl.hemen_lazim.utils.formatDuration
-import com.tpl.hemen_lazim.utils.formatEndTime
-import com.tpl.hemen_lazim.utils.formatRadiusKm
+import com.tpl.hemen_lazim.ui.durationText
+import com.tpl.hemen_lazim.ui.endTimeText
+import com.tpl.hemen_lazim.ui.radiusText
 
 /**
  * Tam ekran talep formu. Yayınlanınca kapanır ve İlanlarım açılır; ilk yayında bildirim izni
@@ -174,9 +174,9 @@ private fun PublishBar(ui: MaterialFormState, onPublish: () -> Unit) {
             Text(
                 text = stringResource(
                     R.string.form_summary,
-                    formatRadiusKm(ui.radiusKm),
-                    formatDuration(ui.durationMinutes),
-                    formatEndTime(ui.durationMinutes)
+                    radiusText(ui.radiusKm),
+                    durationText(ui.durationMinutes),
+                    endTimeText(ui.durationMinutes)
                 ),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,

@@ -40,7 +40,8 @@ fun Profile(
 ) {
     val context = LocalContext.current
     val snackbar = LocalAppSnackbar.current
-    val userName = remember { SharedPreferencesProvider.getPreferredUsername() ?: "Kullanıcı" }
+    val defaultName = stringResource(R.string.profile_default_name)
+    val userName = remember { SharedPreferencesProvider.getPreferredUsername() ?: defaultName }
     val version = remember { appVersion(context) }
     val authRepo = remember { AuthRepository() }
     val scope = rememberCoroutineScope()
@@ -60,7 +61,7 @@ fun Profile(
                 // saniye beklenir; ağ yoksa da çıkış tamamlanır.
                 withTimeoutOrNull(LOGOUT_TIMEOUT_MS) { authRepo.logout() }
                 SharedPreferencesProvider.clearSession() // zaman aşımında da token kalmasın
-                snackbar.show("Çıkış yapıldı")
+                snackbar.show(R.string.profile_logged_out)
                 onLoggedOut()
             }
         }
