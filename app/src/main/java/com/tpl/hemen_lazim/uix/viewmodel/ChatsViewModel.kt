@@ -64,7 +64,11 @@ class ChatsViewModel(
                                 .filter { it !in _ui.value.userNames }
                 if (otherIds.isEmpty()) return@launch
 
-                val resolved = otherIds.map { id -> async { id to userRepo.getUserName(id) } }.awaitAll()
+                // Alınamayan isim kaydedilmez: listede "…" görünür, sonraki tazelemede yeniden denenir
+                val resolved =
+                        otherIds.map { id -> async { userRepo.getUserName(id)?.let { id to it } } }
+                                .awaitAll()
+                                .filterNotNull()
                 _ui.update { it.copy(userNames = it.userNames + resolved) }
             }
 

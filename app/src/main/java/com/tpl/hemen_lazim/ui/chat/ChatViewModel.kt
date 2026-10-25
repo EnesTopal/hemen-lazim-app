@@ -69,12 +69,12 @@ class ChatViewModel(
         currentRoomId = roomId
         currentUserId = userId
         recipientId = otherUserId
-        _otherUserName.value = otherUserId
         repository.connect()
         // Bu oda ekranda açık: gelen mesajlar okunmamış sayılmasın, bekleyenler temizlensin
         ChatUnreadStore.setActiveRoom(roomId)
         loadInitialHistory()
-        viewModelScope.launch { _otherUserName.value = userRepository.getUserName(otherUserId) }
+        // İsim gelene kadar başlık boş kalır (eskiden kullanıcı kimliği görünüyordu)
+        viewModelScope.launch { userRepository.getUserName(otherUserId)?.let { _otherUserName.value = it } }
     }
 
     private fun loadInitialHistory() =
