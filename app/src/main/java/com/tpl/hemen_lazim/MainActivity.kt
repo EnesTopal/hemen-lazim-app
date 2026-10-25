@@ -16,6 +16,7 @@ import androidx.compose.runtime.getValue
 import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.tpl.hemen_lazim.navigation.AppNavHost
 import com.tpl.hemen_lazim.session.SessionManager
 import com.tpl.hemen_lazim.ui.theme.Hemen_lazimTheme
 
@@ -52,7 +53,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             Hemen_lazimTheme {
                 val pendingChat by viewModel.pendingChat.collectAsStateWithLifecycle()
-                PageOrientation(
+                AppNavHost(
                         startsLoggedIn = startsLoggedIn,
                         pendingChat = pendingChat,
                         onChatOpened = viewModel::onChatOpened

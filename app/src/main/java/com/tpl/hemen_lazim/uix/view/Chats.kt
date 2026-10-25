@@ -11,14 +11,16 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.tpl.hemen_lazim.R
 import com.tpl.hemen_lazim.model.Message
 import com.tpl.hemen_lazim.network.repositories.ChatUnreadStore
-import com.tpl.hemen_lazim.uix.innerview.ScreenScaffold
+import com.tpl.hemen_lazim.navigation.Routes
 import com.tpl.hemen_lazim.uix.viewmodel.ChatsViewModel
 import java.text.SimpleDateFormat
 import java.util.*
@@ -32,11 +34,8 @@ fun Chats(navController: NavController, viewModel: ChatsViewModel = viewModel())
     // Refresh on resume
     LaunchedEffect(Unit) { viewModel.refresh() }
 
-    ScreenScaffold(
-            navController,
-            currentRoute = "Chats",
-            topBar = { CenterAlignedTopAppBar(title = { Text("Sohbetler") }) }
-    ) { padding ->
+    Scaffold(topBar = { CenterAlignedTopAppBar(title = { Text(stringResource(R.string.tab_chats)) }) }) {
+            padding ->
         Box(Modifier.fillMaxSize().padding(padding)) {
             if (ui.isLoading) {
                 CircularProgressIndicator(Modifier.align(Alignment.Center))
@@ -64,7 +63,7 @@ fun Chats(navController: NavController, viewModel: ChatsViewModel = viewModel())
                                                     message.recipientId
                                             else message.senderId
                                     navController.navigate(
-                                            "Chat/${message.roomId}/${ui.currentUserId}/$otherUserId"
+                                            Routes.chat(message.roomId, ui.currentUserId, otherUserId)
                                     )
                                 }
                         )

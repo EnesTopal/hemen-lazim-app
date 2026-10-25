@@ -100,7 +100,7 @@ class MaterialRequestCreateViewModel(
                 it.copy(
                     isSubmitting = false,
                     success = true,
-                    toastMessage = "İstek oluşturuldu"
+                    toastMessage = "Talebin yayında"
                 )
             }
         } else {

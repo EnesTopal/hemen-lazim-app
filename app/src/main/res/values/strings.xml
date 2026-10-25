@@ -1,4 +1,29 @@
 <resources>
     <string name="app_name">Hemen Lazım</string>
     <string name="default_notification_channel_id">default_channel_id</string>
+
+    <!-- Genel -->
+    <string name="back">Geri</string>
+    <string name="retry">Tekrar dene</string>
+    <string name="refresh">Yenile</string>
+
+    <!-- Alt bar -->
+    <string name="tab_explore">Keşfet</string>
+    <string name="tab_my_requests">İlanlarım</string>
+    <string name="tab_chats">Sohbetler</string>
+    <string name="tab_profile">Profil</string>
+    <plurals name="unread_messages">
+        <item quantity="one">%d okunmamış mesaj</item>
+        <item quantity="other">%d okunmamış mesaj</item>
+    </plurals>
+
+    <!-- Talep açma -->
+    <string name="create_request">Talep aç</string>
+    <string name="create_request_title">Yeni talep</string>
+    <string name="publish">Yayınla</string>
+
+    <!-- İlanlarım -->
+    <string name="my_requests_empty_title">Henüz talebin yok</string>
+    <string name="my_requests_empty_body">Bir şeye ihtiyacın olduğunda talep aç; yakınındakiler görsün.</string>
+    <string name="my_requests_load_failed">Taleplerin yüklenemedi</string>
 </resources>
