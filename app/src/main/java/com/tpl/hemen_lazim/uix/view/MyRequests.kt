@@ -15,16 +15,21 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.outlined.Cancel
 import androidx.compose.material.icons.outlined.MoreTime
 import androidx.compose.material.icons.outlined.TaskAlt
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
@@ -245,6 +250,7 @@ private fun MyRequestCard(
     onExtend: (() -> Unit)? = null
 ) {
     val status = request.displayStatus(now)
+    val actionable = status == DisplayStatus.OPEN && onComplete != null && onCancel != null && onExtend != null
     ElevatedCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(Spacing.l)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.m)) {
@@ -262,19 +268,21 @@ private fun MyRequestCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                if (busy) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
+                when {
+                    busy -> CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
+                    actionable -> CardMenu(onCancel = onCancel)
+                }
             }
             Spacer(Modifier.height(Spacing.s))
             StatusBadge(status = status, remaining = request.expiresAt?.let { remainingText(it, now) })
 
-            if (status == DisplayStatus.OPEN && onComplete != null && onCancel != null && onExtend != null) {
+            if (actionable) {
                 Spacer(Modifier.height(Spacing.s))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(Spacing.s, Alignment.End),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    TextButton(onClick = onCancel, enabled = !busy) { Text(stringResource(R.string.action_cancel)) }
                     TextButton(onClick = onExtend, enabled = !busy) {
                         Icon(Icons.Outlined.MoreTime, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(Spacing.xs))
@@ -287,6 +295,29 @@ private fun MyRequestCard(
                     }
                 }
             }
+        }
+    }
+}
+
+/** Kartın ⋮ menüsü: geri alınamayan "İptal et" ana eylemlerin yanında durmasın, kırmızıyla ayrışsın. */
+@Composable
+private fun CardMenu(onCancel: () -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+    Box {
+        IconButton(onClick = { expanded = true }) {
+            Icon(Icons.Filled.MoreVert, contentDescription = stringResource(R.string.more_actions))
+        }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.action_cancel), color = MaterialTheme.colorScheme.error) },
+                leadingIcon = {
+                    Icon(Icons.Outlined.Cancel, contentDescription = null, tint = MaterialTheme.colorScheme.error)
+                },
+                onClick = {
+                    expanded = false
+                    onCancel()
+                }
+            )
         }
     }
 }

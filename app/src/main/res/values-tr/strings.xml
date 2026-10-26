@@ -247,9 +247,11 @@
     <string name="status_matched">Eşleşti</string>
     <!-- Açık rozeti: "Açık · 2 sa 15 dk kaldı" -->
     <string name="status_open_with_time">Açık · %1$s kaldı</string>
-    <string name="action_complete">Tamamlandı</string>
+    <string name="action_complete">Tamamla</string>
     <string name="action_cancel">İptal et</string>
     <string name="action_extend">Süre uzat</string>
+    <!-- Talep kartındaki ⋮ düğmesi -->
+    <string name="more_actions">Diğer işlemler</string>
     <string name="cancel_confirm_title">Talebi iptal edelim mi?</string>
     <string name="cancel_confirm_body">İptal edilen talep artık kimseye görünmez.</string>
     <string name="cancel_confirm_yes">İptal et</string>

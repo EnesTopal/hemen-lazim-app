@@ -249,9 +249,11 @@
     <string name="status_matched">Matched</string>
     <!-- Open badge: "Open · 2 h 15 min left" -->
     <string name="status_open_with_time">Open · %1$s left</string>
-    <string name="action_complete">Done</string>
+    <string name="action_complete">Mark done</string>
     <string name="action_cancel">Cancel</string>
     <string name="action_extend">Extend</string>
+    <!-- The ⋮ button on a request card -->
+    <string name="more_actions">More actions</string>
     <string name="cancel_confirm_title">Cancel this request?</string>
     <string name="cancel_confirm_body">A canceled request is no longer visible to anyone.</string>
     <string name="cancel_confirm_yes">Cancel request</string>
