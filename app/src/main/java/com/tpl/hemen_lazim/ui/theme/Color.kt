@@ -4,12 +4,14 @@ import androidx.compose.ui.graphics.Color
 
 // Marka rengi turuncu (#E8590C). Roller, Google'ın material-color-utilities paletlerinden
 // (Fidelity) Material Theme Builder'ın standart ton eşlemesiyle üretildi. Tek fark: açık temada
-// ana renk ton 40 yerine 48; beyaz yazıyla kontrast 4,8:1 (AA) ve daha "turuncu".
+// ana renk ton 40 yerine 44 (#B84200); daha "turuncu" ama AA'yı geçiyor: turuncu metin kart ve
+// alt sayfa zemininde (surfaceContainerLow) 5,0:1, üstündeki beyaz yazı 5,5:1. Ton 48 (#C74800)
+// kart zemininde 4,4:1'de kalıyordu.
 // Elle değiştirmek yerine tohum rengi değiştirip yeniden üretmek daha tutarlı olur.
 
 val BrandOrange = Color(0xFFE8590C)
 
-val lightPrimary = Color(0xFFC74800)
+val lightPrimary = Color(0xFFB84200)
 val lightOnPrimary = Color(0xFFFFFFFF)
 val lightPrimaryContainer = Color(0xFFFFDBCE)
 val lightOnPrimaryContainer = Color(0xFF370E00)
@@ -72,7 +74,7 @@ val darkOutlineVariant = Color(0xFF5A4138)
 val darkScrim = Color(0xFF000000)
 val darkInverseSurface = Color(0xFFF8DDD4)
 val darkInverseOnSurface = Color(0xFF3D2D27)
-val darkInversePrimary = Color(0xFFC74800)
+val darkInversePrimary = Color(0xFFB84200)
 val darkSurfaceDim = Color(0xFF1D100B)
 val darkSurfaceBright = Color(0xFF46352F)
 val darkSurfaceContainerLowest = Color(0xFF170B07)

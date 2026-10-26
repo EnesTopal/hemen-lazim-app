@@ -367,7 +367,8 @@ fun MessageItem(message: Message, isOwnMessage: Boolean, onRetry: () -> Unit) {
                         Text(
                                 text = clockText(message.serverTimestamp),
                                 style = MaterialTheme.typography.labelSmall,
-                                color = content.copy(alpha = 0.7f),
+                                // Turuncu balonda soluk beyaz okunmuyor (3,1:1); orada saat tam renkte
+                                color = if (isOwnMessage) content else content.copy(alpha = 0.7f),
                                 modifier = Modifier.align(Alignment.End)
                         )
                     }
