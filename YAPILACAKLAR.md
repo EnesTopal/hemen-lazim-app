@@ -4,6 +4,33 @@ Bu not, bu daldaki işi yerelde derleyip cihazda deneyecek kişi ya da Claude i�
 
 **Bu dal yalnızca yeni sunucuyla çalışır.** Önce `hemen-lazim-spring` reposunun aynı adlı dalındaki `YAPILACAKLAR.md`'yi uygula: veritabanı göçünü yap ve yeni sunucuyu başlat. Eski sunucuyla talep açma, süre uzatma ve hata metinleri çalışmaz.
 
+## Bu dal `ui-refactor` ise önce bunu oku
+`ui-refactor`, `refactor-project`'in üstüne yalnızca arayüz iyileştirmeleri ekliyor; kaynağı tasarım eleştirisi. Sunucu değişmedi: sunucu `hemen-lazim-spring` reposunun `refactor-project` dalından çalışır (sunucuda `ui-refactor` dalı yok). Beğenilmezse `refactor-project`'e dönmek yeterli.
+
+Aşağıdaki adımlarda `refactor-project` geçen yerlerde, uygulama için `ui-refactor` kullan.
+
+**Değişenler** (`git log --oneline refactor-project..ui-refactor`):
+- **Kontrast:** açık temada turuncu `#B84200`; turuncu metin kart zemininde AA'yı geçiyor. Kendi sohbet balonundaki saat tam beyaz.
+- **İlanlarım:** buton "Tamamla" / "Mark done". "İptal et" kartın ⋮ menüsünde, kırmızı.
+- **Talep detayı:** miktar, uzaklık ve kalan süre zeminsiz bilgi satırında; kategori adı gri.
+- **Kartlar:** Keşfet ve İlanlarım kartları aynı (yükseltilmiş) stilde. Seçili talep listede de haritadaki gibi mavi çerçeveli.
+- **Metinler:** tam kilometrede ondalık yok ("10 km"); başlık örneğinde miktar yok.
+- **Erişilebilirlik:** kategori emojisi ekran okuyucuda okunmuyor, büyük yazıda daireden taşmıyor.
+- **Keşfet:** harita 220 dp; ipucu satırı ve kaydırıcının uç etiketleri yok. İlk ekranda yaklaşık 4 talep görünüyor.
+- **Talep formu:** miktar ve birim tek satırda: `− 2 + [Adet ▾]`. Varsayılan birim Adet. Yer yetmezse menü alta iner.
+
+**Cihazda ayrıca bak** (aşağıdaki deneme listesine ek):
+- **Keşfet:** ilk ekranda kaç talep görünüyor? Küçük haritada işarete dokunmak ve haritayı kaydırmak rahat mı?
+- **İlanlarım:** ⋮ → İptal et → onay diyaloğu çalışıyor mu?
+- **Form:**
+  - Birim menüsü açılıyor mu?
+  - Dar telefonda (360 dp) miktar ve birim aynı satırda mı?
+  - Ekran boyutu ayarı en büyükteyken menü alta iniyor mu?
+- **Renk:** açık temada biraz koyulaşan turuncu göze nasıl geliyor?
+- **TalkBack:** kartlarda ve kategori çiplerinde emojinin adı okunmamalı.
+
+**Birleştirme:** kullanıcının onayıyla, önce `refactor-project` sonra `ui-refactor` `main`'e. İstenirse doğrudan `ui-refactor`; o da `refactor-project`'i içeriyor.
+
 ## Bu dalda ne var
 `main`'e göre farklar: `git log --oneline origin/main..refactor-project`. Özetle:
 - **Görünüm:** turuncu tema (koyu tema dahil), "Hemen Lazım" adı ve ikonu, Android 12 açılış ekranı.
