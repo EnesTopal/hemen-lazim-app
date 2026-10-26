@@ -33,12 +33,14 @@ fun NearbyRequestCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // İlanlarım kartlarıyla aynı yükseltilmiş kart: düz kart zeminden neredeyse ayrışmıyordu (1,05:1)
     Card(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-        // Haritada dairesi vurgulanan talep listede de belli olsun
-        border = if (highlighted) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null
+        colors = CardDefaults.elevatedCardColors(),
+        elevation = CardDefaults.elevatedCardElevation(),
+        // Haritada dairesi vurgulanan talep listede de aynı renkle belli olsun
+        border = if (highlighted) BorderStroke(2.dp, MaterialTheme.colorScheme.tertiary) else null
     ) {
         Row(
             modifier = Modifier.padding(Spacing.m),
