@@ -78,46 +78,37 @@ private fun RequestDetailContent(request: MaterialRequestDTO, isSending: Boolean
             CategoryBadge(request.category, size = 56.dp)
             Column(Modifier.weight(1f)) {
                 Text(request.title, style = MaterialTheme.typography.titleLarge)
+                // Gri: turuncu metin bağlantı gibi okunuyordu
                 Text(
                     request.category.label(),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
 
         FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(Spacing.s),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.l),
             verticalArrangement = Arrangement.spacedBy(Spacing.s)
         ) {
             quantityText(request)?.let { quantity ->
-                InfoPill(Icons.Outlined.Inventory2, quantity)
+                InfoItem(Icons.Outlined.Inventory2, quantity)
             }
             request.distanceMeters?.let { meters ->
-                InfoPill(Icons.Outlined.NearMe, stringResource(R.string.distance_away, distanceText(meters)))
+                InfoItem(Icons.Outlined.NearMe, stringResource(R.string.distance_away, distanceText(meters)))
             }
             request.expiresAt?.let { remainingText(it) }?.let { remaining ->
-                InfoPill(Icons.Outlined.Schedule, stringResource(R.string.time_left, remaining))
+                InfoItem(Icons.Outlined.Schedule, stringResource(R.string.time_left, remaining))
             }
         }
 
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                Icons.Outlined.PersonOutline,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(18.dp)
+        InfoItem(
+            Icons.Outlined.PersonOutline,
+            stringResource(
+                R.string.request_requester,
+                request.requesterName ?: stringResource(R.string.request_requester_unknown)
             )
-            Spacer(Modifier.width(Spacing.s))
-            Text(
-                stringResource(
-                    R.string.request_requester,
-                    request.requesterName ?: stringResource(R.string.request_requester_unknown)
-                ),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
+        )
 
         if (!request.description.isNullOrBlank()) {
             Surface(
@@ -189,23 +180,21 @@ fun SameSpotRequestsSheet(
     }
 }
 
-/** Ayrıntıdaki küçük bilgi hapı: simge + kısa metin (tıklanmaz). */
+/**
+ * Ayrıntıdaki bilgi: simge + kısa metin. Tıklanmadığı için zeminsiz; dolgulu hap olarak
+ * düğme gibi görünüyordu.
+ */
 @Composable
-private fun InfoPill(icon: ImageVector, text: String) {
-    Surface(color = MaterialTheme.colorScheme.secondaryContainer, shape = MaterialTheme.shapes.small) {
-        Row(
-            modifier = Modifier.padding(horizontal = Spacing.m, vertical = Spacing.s),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                modifier = Modifier.size(16.dp)
-            )
-            Spacer(Modifier.width(Spacing.xs))
-            Text(text, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSecondaryContainer)
-        }
+private fun InfoItem(icon: ImageVector, text: String) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(
+            icon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(18.dp)
+        )
+        Spacer(Modifier.width(Spacing.s))
+        Text(text, style = MaterialTheme.typography.bodyMedium)
     }
 }
 
