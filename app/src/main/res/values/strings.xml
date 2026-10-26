@@ -113,7 +113,6 @@
 
     <!-- Explore -->
     <string name="explore_search_area">Search area</string>
-    <string name="explore_map_hint">Tap a marker on the map or a request below for details.</string>
     <plurals name="explore_results">
         <item quantity="one">%d request · nearest first</item>
         <item quantity="other">%d requests · nearest first</item>

@@ -34,7 +34,9 @@ fun RadiusSlider(
     // Sürükleme bitince bir kez çağrılır: ağ isteği gibi pahalı işler buraya
     onRadiusChangeFinished: () -> Unit = {},
     minKm: Float = RequestLimits.MIN_RADIUS_KM,
-    maxKm: Float = RequestLimits.MAX_RADIUS_KM
+    maxKm: Float = RequestLimits.MAX_RADIUS_KM,
+    // Kaydırıcının altındaki en küçük / en büyük değer etiketleri; yer darsa gizlenir
+    showBounds: Boolean = true
 ) {
     val span = maxKm - minKm
     val label = radiusText(radiusKm)
@@ -67,17 +69,19 @@ fun RadiusSlider(
             }
         )
 
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(
-                text = radiusText(minKm),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                text = radiusText(maxKm),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+        if (showBounds) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text(
+                    text = radiusText(minKm),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = radiusText(maxKm),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
 }

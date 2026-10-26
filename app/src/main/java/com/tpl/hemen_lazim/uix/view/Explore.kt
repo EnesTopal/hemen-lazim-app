@@ -164,7 +164,9 @@ private fun ExploreContent(
                 title = stringResource(R.string.explore_search_area),
                 radiusKm = ui.radiusKm,
                 onRadiusChange = onRadiusChange,
-                onRadiusChangeFinished = onRefresh
+                onRadiusChangeFinished = onRefresh,
+                // Seçili değer başlığın yanında yazıyor; uç etiketlerinin satırı listeye kalsın
+                showBounds = false
             )
 
             // Konum bilinene kadar liste yok; harita kartı izin/konum durumunu zaten gösteriyor

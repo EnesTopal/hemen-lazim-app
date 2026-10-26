@@ -1,9 +1,6 @@
 package com.tpl.hemen_lazim.uix.innerview
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -12,10 +9,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.google.android.gms.maps.model.CameraPosition
-import com.tpl.hemen_lazim.R
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.Circle
 import com.google.maps.android.compose.rememberCameraPositionState
@@ -59,39 +54,33 @@ fun RespondMapView(
         currentOnLocationReceived(here)
     }
 
-    Column(modifier) {
-        HemenMapCard(
-            location = location,
-            cameraPositionState = cameraPositionState,
-            circleCenter = { location.lastLocation },
-            radiusMeters = radiusMeters,
-            // Talebin merkezi arama dairesinin dışında olabilir (daireler kesişiyorsa listelenir);
-            // kamera arama alanını ve bulunan tüm talepleri birlikte göstersin
-            fitKey = Triple(location.locationVersion, radiusKm, requestPoints),
-            fitBounds = { location.lastLocation?.let { boundsAround(it, radiusMeters, requestPoints) } },
-            onTouchChange = onMapTouchChange
-        ) {
-            highlightedRequest?.radiusMeters?.let { requestRadius ->
-                Circle(
-                    center = LatLng(highlightedRequest.latitude, highlightedRequest.longitude),
-                    radius = requestRadius.toDouble(),
-                    strokeColor = highlightColor,
-                    strokeWidth = 3f,
-                    fillColor = highlightColor.copy(alpha = 0.08f)
-                )
-            }
-            RequestMarkers(
-                requests = nearbyRequests,
-                cameraPositionState = cameraPositionState,
-                onRequestClick = onRequestClick,
-                onSameSpotClick = { sameSpotRequests = it }
+    HemenMapCard(
+        location = location,
+        cameraPositionState = cameraPositionState,
+        circleCenter = { location.lastLocation },
+        radiusMeters = radiusMeters,
+        // Talebin merkezi arama dairesinin dışında olabilir (daireler kesişiyorsa listelenir);
+        // kamera arama alanını ve bulunan tüm talepleri birlikte göstersin
+        fitKey = Triple(location.locationVersion, radiusKm, requestPoints),
+        fitBounds = { location.lastLocation?.let { boundsAround(it, radiusMeters, requestPoints) } },
+        onTouchChange = onMapTouchChange,
+        modifier = modifier,
+        height = EXPLORE_MAP_HEIGHT
+    ) {
+        highlightedRequest?.radiusMeters?.let { requestRadius ->
+            Circle(
+                center = LatLng(highlightedRequest.latitude, highlightedRequest.longitude),
+                radius = requestRadius.toDouble(),
+                strokeColor = highlightColor,
+                strokeWidth = 3f,
+                fillColor = highlightColor.copy(alpha = 0.08f)
             )
         }
-        Text(
-            text = stringResource(R.string.explore_map_hint),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = 8.dp)
+        RequestMarkers(
+            requests = nearbyRequests,
+            cameraPositionState = cameraPositionState,
+            onRequestClick = onRequestClick,
+            onSameSpotClick = { sameSpotRequests = it }
         )
     }
 
@@ -106,3 +95,7 @@ fun RespondMapView(
         )
     }
 }
+
+// Keşfet'te asıl karar listede veriliyor: harita küçük kalsın, ilk ekranda daha çok talep görünsün
+// (320 dp'de yaklaşık 2,5 talep sığıyordu). Talep formunda iğne yerleştirmek için büyük harita kalır.
+private val EXPLORE_MAP_HEIGHT = 220.dp

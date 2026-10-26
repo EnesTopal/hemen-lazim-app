@@ -111,7 +111,6 @@
 
     <!-- Keşfet -->
     <string name="explore_search_area">Arama alanı</string>
-    <string name="explore_map_hint">Ayrıntı için haritadaki işarete ya da aşağıdaki talebe dokun.</string>
     <plurals name="explore_results">
         <item quantity="one">%d talep · yakından uzağa</item>
         <item quantity="other">%d talep · yakından uzağa</item>

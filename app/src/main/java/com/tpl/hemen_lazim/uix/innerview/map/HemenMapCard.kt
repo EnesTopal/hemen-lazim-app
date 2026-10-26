@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -45,6 +46,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.LatLng
@@ -74,8 +76,9 @@ private val MAP_UI_SETTINGS = MapUiSettings(
 )
 
 /**
- * İlan açma ve arama ekranlarının ortak harita kartı: aynı boyut, aynı butonlar, aynı daire
- * stili ve aynı konum durumu ekranları. Ekrana özgü içerik (talepler) [content] ile verilir.
+ * İlan açma ve arama ekranlarının ortak harita kartı: aynı butonlar, aynı daire stili ve aynı
+ * konum durumu ekranları. Haritanın yüksekliğini ekran seçer ([height]); konum/izin ekranı en az o
+ * kadar, metni sığmazsa daha uzun olur. Ekrana özgü içerik (talepler) [content] ile verilir.
  *
  * Kart kaydırılabilir bir formun içinde durduğu için haritaya dokunulduğu sürece
  * [onTouchChange] ile haber verir; ekran bu sırada sayfa kaydırmasını kapatır, yoksa dikey
@@ -93,6 +96,7 @@ fun HemenMapCard(
     fitBounds: () -> LatLngBounds?,
     onTouchChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
+    height: Dp = MAP_HEIGHT,
     showMap: Boolean = location.lastLocation != null,
     showCenterPin: Boolean = false,
     onRecenter: () -> Unit = location::refresh,
@@ -103,14 +107,15 @@ fun HemenMapCard(
     // Android Studio önizlemesinde (ve ekran görüntüsü testlerinde) GoogleMap çizilmiyor, konum da
     // istenmiyor: kart haritanın yerine sade bir çizimle, butonlarıyla birlikte görünür
     val inPreview = LocalInspectionMode.current
+    val showingMap = showMap || inPreview
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .height(MAP_HEIGHT),
+            .then(if (showingMap) Modifier.height(height) else Modifier.heightIn(min = height)),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
-        if (showMap || inPreview) {
+        if (showingMap) {
             MapContent(
                 location = location,
                 cameraPositionState = cameraPositionState,
