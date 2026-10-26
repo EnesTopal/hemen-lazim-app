@@ -208,7 +208,8 @@
     <string name="form_section_where">Nerede?</string>
     <string name="form_section_how_long">Ne kadar süre?</string>
     <string name="form_title_label">Başlık</string>
-    <string name="form_title_placeholder">Örn. 2 kg un, priz adaptörü</string>
+    <!-- Örnekte miktar yok: miktarın ayrı alanı var -->
+    <string name="form_title_placeholder">Örn. un, priz adaptörü, bebek bezi</string>
     <string name="form_category">Kategori</string>
     <string name="form_quantity">Miktar</string>
     <string name="form_quantity_decrease">Miktarı azalt</string>

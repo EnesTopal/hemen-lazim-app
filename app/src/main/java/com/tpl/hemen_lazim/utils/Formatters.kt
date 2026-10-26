@@ -11,11 +11,16 @@ import kotlin.math.roundToInt
 
 private val TURKISH: Locale = Locale.forLanguageTag("tr-TR")
 
-/** "850 m" / "1,2 km" (ondalık ayırıcı dile göre: İngilizcede "1.2 km") */
+/**
+ * "850 m" / "1,2 km" / "10 km": kilometrede tek ondalık, tam kilometrede ondalıksız. Ondalık
+ * ayırıcı dile göre (İngilizcede "1.2 km").
+ */
 fun formatDistance(meters: Double, locale: Locale = Locale.getDefault()): String {
     val roundedMeters = (meters / 10).roundToInt() * 10
-    return if (roundedMeters < 1000) "$roundedMeters m"
-    else String.format(locale, "%.1f km", meters / 1000)
+    if (roundedMeters < 1000) return "$roundedMeters m"
+    val tenthsOfKm = (meters / 100).roundToInt()
+    return if (tenthsOfKm % 10 == 0) String.format(locale, "%d km", tenthsOfKm / 10)
+    else String.format(locale, "%.1f km", tenthsOfKm / 10.0)
 }
 
 fun formatRadiusKm(km: Float, locale: Locale = Locale.getDefault()): String = formatDistance(km * 1000.0, locale)

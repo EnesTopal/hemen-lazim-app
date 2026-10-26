@@ -210,7 +210,8 @@
     <string name="form_section_where">Where?</string>
     <string name="form_section_how_long">For how long?</string>
     <string name="form_title_label">Title</string>
-    <string name="form_title_placeholder">e.g. 2 kg of flour, plug adapter</string>
+    <!-- No quantity in the example: quantity has its own field -->
+    <string name="form_title_placeholder">e.g. flour, plug adapter, diapers</string>
     <string name="form_category">Category</string>
     <string name="form_quantity">Quantity</string>
     <string name="form_quantity_decrease">Decrease quantity</string>

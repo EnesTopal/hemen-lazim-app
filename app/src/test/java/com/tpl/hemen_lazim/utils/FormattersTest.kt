@@ -14,8 +14,18 @@ class FormattersTest {
     @Test
     fun distanceIsInMetresBelowOneKilometre() {
         assertEquals("850 m", formatDistance(847.0, turkish))
-        assertEquals("1,0 km", formatDistance(998.0, turkish))
+        assertEquals("1 km", formatDistance(998.0, turkish))
         assertEquals("1,2 km", formatDistance(1_234.0, turkish))
+    }
+
+    @Test
+    fun wholeKilometresHaveNoDecimal() {
+        assertEquals("2 km", formatDistance(2_000.0, turkish))
+        assertEquals("2 km", formatDistance(1_960.0, turkish))
+        assertEquals("1,9 km", formatDistance(1_940.0, turkish))
+        assertEquals("10 km", formatDistance(10_000.0, turkish))
+        assertEquals("10 km", formatRadiusKm(10f, Locale.ENGLISH))
+        assertEquals("1.5 km", formatRadiusKm(1.5f, Locale.ENGLISH))
     }
 
     @Test
