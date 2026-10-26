@@ -21,13 +21,22 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -51,6 +60,8 @@ import com.tpl.hemen_lazim.ui.theme.Spacing
 // Sunucudaki MaterialRequestCreateDTO sınırları
 private const val TITLE_MAX = 120
 private const val DESCRIPTION_MAX = 1000
+// En uzun birim adı ("Litre", "Liter") ve açma oku sığsın; adımlayıcıyla yan yana dursun
+private val UNIT_MENU_WIDTH = 140.dp
 
 /** Formdaki girdiler: ViewModel uygular, önizleme boş bir uygulama verir. */
 interface CreateFormActions {
@@ -154,25 +165,18 @@ private fun ColumnScope.WhatSection(ui: MaterialFormState, actions: CreateFormAc
     }
 
     FieldLabel(stringResource(R.string.form_quantity), error = ui.quantityError)
-    QuantityStepper(
-        value = ui.quantity,
-        onValueChange = actions::onQuantity,
-        onDecrease = actions::decrementQuantity,
-        onIncrease = actions::incrementQuantity
-    )
-
-    FieldLabel(stringResource(R.string.form_unit), error = ui.unitError)
+    // "− 2 + [Adet ▾]" tek satırda; dar ekranda birim alt satıra iner
     FlowRow(
         horizontalArrangement = Arrangement.spacedBy(Spacing.s),
-        verticalArrangement = Arrangement.spacedBy(Spacing.xs)
+        verticalArrangement = Arrangement.spacedBy(Spacing.s)
     ) {
-        Units.entries.forEach { unit ->
-            FilterChip(
-                selected = ui.units == unit,
-                onClick = { actions.onUnit(unit) },
-                label = { Text(unit.label()) }
-            )
-        }
+        QuantityStepper(
+            value = ui.quantity,
+            onValueChange = actions::onQuantity,
+            onDecrease = actions::decrementQuantity,
+            onIncrease = actions::incrementQuantity
+        )
+        UnitMenu(selected = ui.units, onSelect = actions::onUnit)
     }
 
     OutlinedTextField(
@@ -218,6 +222,38 @@ private fun QuantityStepper(
         )
         FilledTonalIconButton(onClick = onIncrease) {
             Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.form_quantity_increase))
+        }
+    }
+}
+
+/** Birim seçimi açılır menüde: yedi birim çipi iki satır yer kaplıyordu ve miktardan ayrı duruyordu. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun UnitMenu(selected: Units, onSelect: (Units) -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
+        OutlinedTextField(
+            value = selected.label(),
+            onValueChange = {},
+            readOnly = true,
+            singleLine = true,
+            label = { Text(stringResource(R.string.form_unit)) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            modifier = Modifier
+                .menuAnchor(MenuAnchorType.PrimaryNotEditable)
+                .width(UNIT_MENU_WIDTH)
+        )
+        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            Units.entries.forEach { unit ->
+                DropdownMenuItem(
+                    text = { Text(unit.label()) },
+                    onClick = {
+                        onSelect(unit)
+                        expanded = false
+                    },
+                    contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
+                )
+            }
         }
     }
 }

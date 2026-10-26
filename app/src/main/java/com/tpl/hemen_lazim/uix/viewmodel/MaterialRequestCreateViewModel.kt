@@ -44,7 +44,7 @@ class MaterialRequestCreateViewModel(
         val next = (current + delta).coerceIn(1, MAX_QUANTITY)
         it.copy(quantity = next.toString(), quantityError = null)
     }
-    override fun onUnit(v: Units) = _ui.update { it.copy(units = v, unitError = null) }
+    override fun onUnit(v: Units) = _ui.update { it.copy(units = v) }
     fun onLat(v: String) = _ui.update { it.copy(latitude = v, latError = null) }
     fun onLon(v: String) = _ui.update { it.copy(longitude = v, lonError = null) }
     

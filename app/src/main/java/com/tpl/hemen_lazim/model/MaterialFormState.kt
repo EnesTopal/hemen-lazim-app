@@ -10,7 +10,8 @@ data class MaterialFormState(
     val category: Category? = null,
     // Çoğu talepte bir miktar var; − / + ile değişir, istenirse silinip boş bırakılabilir
     val quantity: String = "1",
-    val units: Units = Units.PARCA,
+    // Varsayılan Adet: sayılabilen çoğu şey için doğru, birim menüsünü çoğu zaman açmak gerekmez
+    val units: Units = Units.ADET,
     val latitude: String = "",
     val longitude: String = "",
     val radiusKm: Float = RequestLimits.DEFAULT_REQUEST_RADIUS_KM,
@@ -19,7 +20,6 @@ data class MaterialFormState(
     @StringRes val titleError: Int? = null,
     @StringRes val categoryError: Int? = null,
     @StringRes val quantityError: Int? = null,
-    @StringRes val unitError: Int? = null,
     @StringRes val latError: Int? = null,
     @StringRes val lonError: Int? = null,
     // UI
@@ -30,7 +30,6 @@ data class MaterialFormState(
     val canSubmit: Boolean
         get() = title.isNotBlank()
                 && category != null
-                && units != null
                 && latitude.toDoubleOrNull() != null
                 && longitude.toDoubleOrNull() != null
 }
