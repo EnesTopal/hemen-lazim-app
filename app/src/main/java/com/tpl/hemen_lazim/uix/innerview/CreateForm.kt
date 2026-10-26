@@ -4,6 +4,7 @@ import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -60,8 +61,11 @@ import com.tpl.hemen_lazim.ui.theme.Spacing
 // Sunucudaki MaterialRequestCreateDTO sınırları
 private const val TITLE_MAX = 120
 private const val DESCRIPTION_MAX = 1000
-// En uzun birim adı ("Litre", "Liter") ve açma oku sığsın; adımlayıcıyla yan yana dursun
-private val UNIT_MENU_WIDTH = 140.dp
+// Miktar alanı dört haneye yetiyor; dar tutuldu ki yanında birim menüsüne yer kalsın
+private val QUANTITY_FIELD_WIDTH = 72.dp
+// Adımlayıcı (48 + 4 + 72 + 4 + 48 = 176 dp), aradaki 8 dp ve birim menüsünün en dar hali
+// (112 dp: en uzun birim adı ve açma oku). Daha dar yerde menü alt satıra iner.
+private val QUANTITY_ROW_MIN_WIDTH = 296.dp
 
 /** Formdaki girdiler: ViewModel uygular, önizleme boş bir uygulama verir. */
 interface CreateFormActions {
@@ -165,18 +169,29 @@ private fun ColumnScope.WhatSection(ui: MaterialFormState, actions: CreateFormAc
     }
 
     FieldLabel(stringResource(R.string.form_quantity), error = ui.quantityError)
-    // "− 2 + [Adet ▾]" tek satırda; dar ekranda birim alt satıra iner
-    FlowRow(
-        horizontalArrangement = Arrangement.spacedBy(Spacing.s),
-        verticalArrangement = Arrangement.spacedBy(Spacing.s)
-    ) {
-        QuantityStepper(
-            value = ui.quantity,
-            onValueChange = actions::onQuantity,
-            onDecrease = actions::decrementQuantity,
-            onIncrease = actions::incrementQuantity
-        )
-        UnitMenu(selected = ui.units, onSelect = actions::onUnit)
+    // "− 2 + [Adet ▾]" tek satırda; birim menüsüne yer kalmayan çok dar ekranda (ya da büyük
+    // ekran ölçeğinde) menü alta, tam genişliğe iner
+    BoxWithConstraints {
+        val stepper = @Composable {
+            QuantityStepper(
+                value = ui.quantity,
+                onValueChange = actions::onQuantity,
+                onDecrease = actions::decrementQuantity,
+                onIncrease = actions::incrementQuantity
+            )
+        }
+        if (maxWidth >= QUANTITY_ROW_MIN_WIDTH) {
+            // Alt kenara hizalı: menünün etiketi kenarlığın üstüne taştığı için kutular ancak böyle hizalanıyor
+            Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
+                stepper()
+                UnitMenu(selected = ui.units, onSelect = actions::onUnit, modifier = Modifier.weight(1f))
+            }
+        } else {
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
+                stepper()
+                UnitMenu(selected = ui.units, onSelect = actions::onUnit, modifier = Modifier.fillMaxWidth())
+            }
+        }
     }
 
     OutlinedTextField(
@@ -208,7 +223,7 @@ private fun QuantityStepper(
     onIncrease: () -> Unit
 ) {
     val current = value.toIntOrNull()
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
         FilledTonalIconButton(onClick = onDecrease, enabled = current == null || current > 1) {
             Icon(Icons.Filled.Remove, contentDescription = stringResource(R.string.form_quantity_decrease))
         }
@@ -218,7 +233,7 @@ private fun QuantityStepper(
             singleLine = true,
             textStyle = MaterialTheme.typography.titleMedium.copy(textAlign = TextAlign.Center),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
-            modifier = Modifier.width(88.dp)
+            modifier = Modifier.width(QUANTITY_FIELD_WIDTH)
         )
         FilledTonalIconButton(onClick = onIncrease) {
             Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.form_quantity_increase))
@@ -229,9 +244,9 @@ private fun QuantityStepper(
 /** Birim seçimi açılır menüde: yedi birim çipi iki satır yer kaplıyordu ve miktardan ayrı duruyordu. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun UnitMenu(selected: Units, onSelect: (Units) -> Unit) {
+private fun UnitMenu(selected: Units, onSelect: (Units) -> Unit, modifier: Modifier = Modifier) {
     var expanded by remember { mutableStateOf(false) }
-    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
+    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }, modifier = modifier) {
         OutlinedTextField(
             value = selected.label(),
             onValueChange = {},
@@ -241,7 +256,7 @@ private fun UnitMenu(selected: Units, onSelect: (Units) -> Unit) {
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             modifier = Modifier
                 .menuAnchor(MenuAnchorType.PrimaryNotEditable)
-                .width(UNIT_MENU_WIDTH)
+                .fillMaxWidth()
         )
         ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             Units.entries.forEach { unit ->
